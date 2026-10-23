@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14231e">
+  <meta name="description" content="Valiant TCG: compra e venda de cartas Pokémon e Magic: The Gathering, acessórios TCG, venda por comissão e avaliação de coleções.">
+  <meta property="og:title" content="Valiant TCG | Magic & Pokémon">
+  <meta property="og:description" content="Seu próximo turno começa aqui. Compra e venda de cartas TCG, acessórios, venda por comissão e avaliação de coleções.">
+  <meta property="og:image" content="assets/foto-valiant.png">
+  <title>Valiant TCG | Magic & Pokémon</title>
+  <link rel="icon" type="image/svg+xml" href="assets/valiant-favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101b18;
+      --bg-deep: #0b1412;
+      --surface: #1a2922;
+      --surface-elevated: #223429;
+      --surface-warm: #342a20;
+      --forest: #38543b;
+      --copper: #af6639;
+      --navy: #273b59;
+      --gold: #efb45a;
+      --gold-light: #ffdf97;
+      --cream: #fff1d9;
+      --text: #f6e8d3;
+      --muted: #bfbea9;
+      --line: #5e654a;
+      --display: 'Cinzel', Georgia, serif;
+      --body: 'DM Sans', system-ui, sans-serif;
+      font-family: var(--body);
+      background: var(--bg);
+      color: var(--text);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 94px; }
+    body { margin: 0; background: radial-gradient(ellipse at 75% 5%, #273b2b 0, transparent 35%), var(--bg); }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--gold-light); outline-offset: 3px; }
+    .container { width: min(1240px, 100%); margin: 0 auto; padding: 0 28px; }
+    .site-header { position: sticky; z-index: 30; top: 0; border-bottom: 1px solid #92734666; background: #102019ed; backdrop-filter: blur(18px); }
+    .header-inner { min-height: 82px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { display: inline-flex; align-items: center; gap: 13px; flex-shrink: 0; }
+    .brand-mark { position: relative; display: grid; place-items: center; overflow: hidden; width: 54px; height: 54px; border-radius: 14px; flex-shrink: 0; border: 2px solid #edb260; background: radial-gradient(circle at 35% 25%, #536747, #162820 85%); box-shadow: 0 0 0 3px #2b392c, 0 5px 25px #e7ab4e1c; }
+    .brand-monogram { font: 800 31px/1 var(--display); color: #ffdd91; text-shadow: 0 2px 9px #0007; }
+    .brand-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .brand-photo[hidden], .hero-image[hidden], .hero-placeholder[hidden] { display: none !important; }
+    .brand-text { display: flex; flex-direction: column; gap: 1px; }
+    .brand-title { font: 800 21px/1.05 var(--display); letter-spacing: 1.2px; white-space: nowrap; }
+    .brand-title span { color: var(--gold); }
+    .brand-sub { color: #c7b894; text-transform: uppercase; font-size: 9px; letter-spacing: 2.4px; font-weight: 800; }
+    .navlinks { display: flex; align-items: center; gap: 26px; color: #e2d3b9; font-weight: 700; font-size: 13px; }
+    .navlinks a:hover { color: var(--gold-light); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; border-radius: 9px; min-height: 45px; padding: 11px 18px; font-weight: 800; font-size: 13px; transition: transform .2s, background .2s, border-color .2s; }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-gold { background: linear-gradient(135deg, #ffda8a, #db9440); color: #281a0d; border: 1px solid #ffd88b; box-shadow: inset 0 1px #fff3c3aa, 0 8px 24px #120d0766; }
+    .btn-outline { border: 1px solid #95794b; color: var(--cream); background: #152a22a8; }
+    .btn-outline:hover { border-color: var(--gold); background: #254032; }
+    .hero { isolation: isolate; border-bottom: 1px solid #86704b55; overflow: hidden; background: radial-gradient(circle at 20% 20%, #5d4c2e25, transparent 43%), linear-gradient(125deg, #14251e, #111c1a 70%); }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, 1.04fr) minmax(0, .96fr); align-items: center; gap: 36px; min-height: 605px; padding-top: 48px; padding-bottom: 54px; }
+    .hero-copy { position: relative; z-index: 2; padding: 14px 0; }
+    .eyebrow { color: var(--gold); font-size: 11px; letter-spacing: 3px; line-height: 1.6; font-weight: 800; text-transform: uppercase; }
+    .eyebrow::before { content: '✦'; padding-right: 12px; font-size: 12px; }
+    .hero h1 { font: 800 clamp(38px, 4.5vw, 66px)/1.15 var(--display); letter-spacing: -.7px; margin: 24px 0; text-wrap: balance; }
+    .hero h1 em { color: var(--gold); font-style: normal; text-shadow: 0 0 36px #e7ac4e31; }
+    .hero-copy > p { max-width: 540px; color: #d1c9b4; line-height: 1.7; font-size: 15px; margin: 0; }
+    .services-title { margin: 3px 0 19px; color: var(--gold-light); font-size: 15px; line-height: 1.45; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; }
+    .services-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 11px; }
+    .services-list li { position: relative; padding-left: 21px; color: #d8cdb9; line-height: 1.6; font-size: 14px; }
+    .services-list li::before { content: '✦'; position: absolute; left: 0; top: 0; color: var(--gold); font-size: 11px; }
+    .services-list strong { color: var(--cream); font-weight: 800; }
+    .hero-copy .services-contact { margin-top: 17px; color: #dcd0bb; font-size: 14px; line-height: 1.6; }
+    .hero-copy .services-outro { margin-top: 12px; color: var(--gold-light); font-size: 15px; font-weight: 800; line-height: 1.5; }
+    .whatsapp-notice { max-width: 520px; font-size: 11px !important; color: #d2c09d !important; margin-top: 10px !important; }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+    .hero-image-frame { position: relative; padding: 11px; border-radius: 27px; border: 1px solid #e1a85a8c; background: linear-gradient(145deg, #9f7142, #403b2b 40%, #847049 100%); box-shadow: 0 36px 90px #050a09af, 0 0 75px #e6a14a24; transform: rotate(1.2deg); }
+    .hero-image-frame::before, .hero-image-frame::after { content: '✦'; position: absolute; z-index: 2; font-size: 28px; color: #ffdc86; text-shadow: 0 0 20px #ffb443; }
+    .hero-image-frame::before { left: -14px; top: -17px; }
+    .hero-image-frame::after { right: -16px; bottom: -18px; }
+    .hero-image { width: 100%; height: 478px; display: block; border-radius: 18px; object-fit: cover; object-position: center; border: 1px solid #ffca73a0; }
+    .hero-placeholder { width: 100%; height: 478px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; text-align: center; padding: 32px; border-radius: 18px; border: 1px solid #ffca73a0; background: radial-gradient(circle at 50% 37%, #7b693a77, transparent 50%), radial-gradient(circle at 25% 80%, #3a57428b, transparent 45%), linear-gradient(135deg, #1e3429, #152320 70%, #293322); }
+    .hero-placeholder .hero-symbol { width: 145px; height: 185px; border: 3px double #e9b66a; border-radius: 12px; display: grid; place-items: center; transform: rotate(-7deg); color: var(--gold-light); font: 800 85px/1 var(--display); box-shadow: 0 10px 38px #0008, 0 0 32px #efb45a22; }
+    .hero-placeholder strong { font: 800 clamp(23px, 3vw, 33px)/1.2 var(--display); letter-spacing: .09em; color: var(--gold-light); }
+    .hero-placeholder small { font-size: 12px; letter-spacing: .14em; color: var(--cream); text-transform: uppercase; }
+    .hero-image-caption { position: absolute; left: 29px; right: 29px; bottom: 27px; padding: 18px 20px; border: 1px solid #fbd4907a; border-radius: 12px; background: linear-gradient(90deg, #111b18e9, #17271dbb); backdrop-filter: blur(8px); box-shadow: 0 8px 26px #0006; }
+    .hero-image-caption span { display: block; color: var(--gold-light); font: 700 19px var(--display); }
+    .hero-image-caption small { display: block; color: #efe2cd; margin-top: 5px; font-size: 12px; letter-spacing: .3px; }
+    .section { padding: 72px 0 90px; }
+    .section-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
+    .section h2 { font: 700 clamp(27px, 3.1vw, 40px)/1.23 var(--display); letter-spacing: -.5px; margin: 12px 0; }
+    .section-intro { color: var(--muted); line-height: 1.6; margin: 0; font-size: 14px; }
+    .count { font-size: 12px; color: var(--gold-light); border: 1px solid #7a754b88; background: #243428; border-radius: 999px; white-space: nowrap; padding: 8px 12px; }
+    .catalog-source { margin: 0 0 18px; padding: 11px 14px; font-size: 12px; line-height: 1.6; color: #f4dfb8; background: #1b3027; border: 1px solid #9a7c4d85; border-radius: 10px; }
+    .catalog-source.preview { background: #3c3020; border-color: #d8a45d; }
+    .catalog-source.problem { background: #4a2925; border-color: #c77d69; }
+    .collections { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 30px 0; }
+    .collection-tile { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid #74714c; border-radius: 15px; padding: 22px 23px; background: linear-gradient(120deg, #2d3e2e, #18271f); text-align: left; color: var(--text); transition: transform .2s, border-color .2s; }
+    .collection-tile:nth-child(2) { background: linear-gradient(120deg, #273956, #192820); border-color: #5e7681; }
+    .collection-tile:hover { transform: translateY(-3px); border-color: var(--gold); }
+    .collection-tile strong { font: 700 17px var(--display); display: block; margin-bottom: 8px; }
+    .collection-tile small { color: #c4bea9; font-size: 12px; }
+    .collection-tile .tile-icon { font-size: 31px; color: var(--gold); filter: drop-shadow(0 2px 12px #daa45c90); }
+    .filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 25px; }
+    .search, select { min-height: 48px; border-radius: 10px; padding: 12px 14px; background: #1a2922; border: 1px solid #6a6d53; color: #fff3df; outline: none; }
+    .search { flex: 2; min-width: 220px; }
+    select { flex: 1; min-width: 180px; }
+    .search:focus, select:focus { border-color: var(--gold); }
+    .search::placeholder { color: #afa992; }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+    .card { overflow: hidden; border-radius: 15px; border: 1px solid #6a614780; background: linear-gradient(160deg, #27372c, #18251f 85%); transition: transform .22s, border-color .22s, box-shadow .22s; }
+    .card:hover { transform: translateY(-6px); border-color: #e5ad60; box-shadow: 0 17px 38px #070e0c66; }
+    .artwrap { position: relative; height: 305px; display: flex; align-items: center; justify-content: center; padding: 20px; background: radial-gradient(circle at 52% 45%, #7557318a 0, #293c33 58%, #16221d 95%); }
+    .card[data-game="Pokémon"] .artwrap { background: radial-gradient(circle at 50% 45%, #4b6b8175 0, #253e42 55%, #15251f 97%); }
+    .artwrap img { height: 100%; max-width: 100%; object-fit: contain; filter: drop-shadow(0 13px 13px #060b0b99); }
+    .tag { position: absolute; top: 12px; left: 12px; border-radius: 999px; background: #16251ee0; border: 1px solid #c49c5e80; font-size: 11px; font-weight: 800; color: #ffdb93; padding: 7px 10px; }
+    .info { padding: 19px 18px 18px; }
+    .game { font-size: 10px; letter-spacing: 1.25px; color: var(--gold); font-weight: 800; text-transform: uppercase; }
+    .info h3 { font: 700 17px/1.35 var(--display); margin: 11px 0 5px; }
+    .sub { font-size: 12px; color: #b6b6a2; min-height: 18px; }
+    .cardbottom { margin-top: 18px; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .price { font-size: 11px; color: #bcb49b; }
+    .price strong { font-size: 14px; color: #f7e8ca; display: block; margin-top: 4px; }
+    .detailbtn { color: #281c0c; border: 1px solid #e5b165; background: #ecc180; border-radius: 8px; padding: 9px 10px; font-size: 11px; font-weight: 800; }
+    .detailbtn:hover { background: #ffe0a1; }
+    .inventory-meta { color: #d3c9b3; font-size: 11px; line-height: 1.5; min-height: 35px; margin-top: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .inventory-pill { border: 1px solid #9f805d90; border-radius: 999px; padding: 3px 8px; background: #1c3026; color: #f6dfb5; }
+    .inventory-pill.out { border-color: #b7766270; color: #e9b19e; }
+    .inventory-pill.demo { border-color: #8d955a70; color: #cdd8a9; }
+    .cardbottom .price strong { font-size: 16px; }
+    .card .tag { z-index: 2; }
+    .empty { grid-column: 1 / -1; text-align: center; padding: 70px 18px; color: var(--muted); border: 1px dashed var(--line); border-radius: 12px; }
+    .contact { margin-top: 58px; padding: 33px 36px; background: linear-gradient(110deg, #3c3727, #2a412e 68%, #1b2d29); border: 1px solid #b88e55; border-radius: 17px; display: flex; align-items: center; justify-content: space-between; gap: 20px; box-shadow: inset 0 1px #ecc7862a; }
+    .contact h2 { font-size: 24px; margin: 0 0 10px; }
+    .contact p { color: #dfd3bb; line-height: 1.65; margin: 0; }
+    .contact .contact-hint { color: #d2c09d; font-size: 11px; margin-top: 9px; }
+    .footer { border-top: 1px solid #74664a80; background: var(--bg-deep); padding: 31px 0; color: #afa98f; font-size: 12px; }
+    .footer-inner { display: flex; justify-content: space-between; gap: 25px; flex-wrap: wrap; align-items: center; }
+    .footer strong { color: var(--gold); font-family: var(--display); }
+    .overlay { position: fixed; z-index: 50; inset: 0; background: #040b09e8; display: none; justify-content: center; align-items: center; padding: 18px; backdrop-filter: blur(9px); }
+    .overlay.open { display: flex; }
+    .modal { position: relative; display: grid; grid-template-columns: 280px 1fr; gap: 29px; width: min(760px, 100%); padding: 30px; background: linear-gradient(145deg, #2d3c2d, #192820); border: 1px solid #d4a365; border-radius: 19px; box-shadow: 0 28px 110px #000b; max-height: 94vh; overflow: auto; }
+    .modal > img { width: 100%; max-height: 420px; object-fit: contain; align-self: center; }
+    .modal h2 { font: 700 27px/1.25 var(--display); margin: 12px 0; }
+    .modal p { line-height: 1.75; color: #d5cbb4; font-size: 14px; }
+    .close { position: absolute; top: 12px; right: 12px; border: 1px solid #c2a37388; border-radius: 50%; background: #24362a; color: #fff0d4; width: 34px; height: 34px; font-weight: 800; }
+    .modal .btn { margin-top: 6px; }
+    .note { color: #aea58d !important; font-size: 11px !important; }
+    @media (max-width: 1040px) {
+      .navlinks { gap: 16px; }
+      .hero-grid { gap: 26px; }
+      .hero-image, .hero-placeholder { height: 445px; }
+      .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (max-width: 850px) {
+      .navlinks { display: none; }
+      .hero-grid { grid-template-columns: 1fr; padding-top: 55px; padding-bottom: 65px; }
+      .hero-copy { max-width: 680px; }
+      .hero-image-frame { width: min(670px, 100%); margin: 0 auto; transform: none; }
+      .hero-image, .hero-placeholder { height: auto; aspect-ratio: 1.4; }
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 560px) {
+      .container { padding: 0 17px; }
+      .header-inner { min-height: 70px; gap: 8px; }
+      .brand { gap: 9px; }
+      .brand-mark { width: 44px; height: 44px; border-radius: 10px; }
+      .brand-monogram { font-size: 25px; }
+      .hero-placeholder .hero-symbol { width: 90px; height: 120px; font-size: 53px; }
+      .brand-title { font-size: 15px; }
+      .brand-sub { letter-spacing: 1.1px; font-size: 8px; }
+      .header-inner > .btn { font-size: 11px; min-height: 38px; padding: 8px 10px; }
+      .hero h1 { font-size: clamp(33px, 8.2vw, 47px); }
+      .hero-copy > p { font-size: 14px; }
+      .services-title { font-size: 13px; }
+      .services-list li { font-size: 13px; }
+      .hero-image-caption { left: 18px; right: 18px; bottom: 18px; padding: 12px; }
+      .hero-image-caption span { font-size: 14px; }
+      .hero-image-caption small { font-size: 10px; }
+      .section { padding: 54px 0 67px; }
+      .section-top { align-items: flex-start; }
+      .count { font-size: 10px; }
+      .collections { grid-template-columns: 1fr; }
+      .collection-tile { padding: 18px; }
+      .artwrap { height: 225px; padding: 12px; }
+      .grid { gap: 11px; }
+      .info { padding: 13px; }
+      .info h3 { font-size: 13px; min-height: 35px; }
+      .sub { font-size: 10px; }
+      .cardbottom { align-items: flex-end; flex-wrap: wrap; }
+      .detailbtn { width: 100%; }
+      .contact { display: block; padding: 27px 21px; }
+      .contact h2 { font-size: 19px; }
+      .contact .btn { margin-top: 21px; }
+      .modal { grid-template-columns: 1fr; gap: 15px; padding: 21px; }
+      .modal > img { max-height: 255px; }
+      .modal h2 { font-size: 21px; }
+    }
+    @media (max-width: 360px) { .grid { grid-template-columns: 1fr; } .artwrap { height: 290px; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#inicio" aria-label="Valiant TCG — início">
+        <span class="brand-mark" aria-hidden="true"><span class="brand-monogram">V</span><img class="brand-photo" id="brandPhoto" hidden alt=""></span>
+        <span class="brand-text"><span class="brand-title">VALIANT <span>TCG</span></span><span class="brand-sub">Cartas & colecionáveis</span></span>
+      </a>
+      <nav class="navlinks" aria-label="Navegação principal">
+        <a href="#catalogo">Catálogo</a>
+        <a href="#catalogo" data-filter="Magic">Magic</a>
+        <a href="#catalogo" data-filter="Pokémon">Pokémon TCG</a>
+        <a href="#contato">Contato</a>
+      </nav>
+      <a class="btn btn-gold" href="#catalogo">Explorar cartas <span aria-hidden="true">↗</span></a>
+    </div>
+  </header>
+  <main>
+    <section class="hero" id="inicio">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <div class="eyebrow">Bem-vindo à Valiant TCG</div>
+          <h1>Seu próximo turno <em>começa aqui.</em></h1>
+          <h2 class="services-title">COMPRA E VENDA DE CARTAS TCG E ACESSÓRIOS!</h2>
+          <ul class="services-list">
+            <li><strong>Venda de cartas:</strong> Trabalho com a venda de cartas de Pokémon e Magic: The Gathering.</li>
+            <li><strong>Venda de acessórios:</strong> Ofereço acessórios para jogadores.</li>
+            <li><strong>Venda por comissão:</strong> Quer vender suas cartas? Eu anuncio e realizo a venda para você, cobrando uma comissão pelo serviço.</li>
+            <li><strong>Avaliação para compra:</strong> Analiso cartas e coleções para possíveis propostas de compra.</li>
+          </ul>
+          <p class="services-contact">Para mais informações, avaliações ou negociações, entre em contato!</p>
+          <p class="services-outro">Sua coleção merece boas oportunidades!</p>
+          <div class="hero-actions">
+            <a class="btn btn-gold" data-whatsapp href="https://wa.me/5516996176955?text=Ol%C3%A1%2C%20tudo%20bem%3F%20Vim%20pelo%20site%20Valiant%20TCG%20e%20gostaria%20de%20saber%20mais%20informa%C3%A7%C3%B5es%20sobre%20o%20seguinte%20assunto%3A" target="_blank" rel="noopener noreferrer">Contato pelo WhatsApp <span aria-hidden="true">↗</span></a>
+            <a class="btn btn-outline" href="#catalogo">Explorar as cartas <span aria-hidden="true">↓</span></a>
+          </div>
+        </div>
+        <div class="hero-image-frame">
+          <img class="hero-image" id="heroPhoto" alt="Imagem de apresentação da Valiant TCG" hidden fetchpriority="high">
+          <div class="hero-placeholder" id="heroPlaceholder" aria-label="Identidade visual Valiant TCG"><span class="hero-symbol" aria-hidden="true">V</span><strong>VALIANT TCG</strong><small>Magic · Pokémon · Colecionáveis</small></div>
+          <div class="hero-image-caption"><span>O universo Valiant TCG</span><small>Magic • Pokémon • Colecionismo</small></div>
+        </div>
+      </div>
+    </section>
+    <section class="section container" id="catalogo">
+      <div class="section-top">
+        <div><div class="eyebrow">Sua jornada começa aqui</div><h2>Explore as cartas</h2><p class="section-intro">Escolha um universo, encontre suas favoritas e descubra seus detalhes.</p></div>
+        <span class="count" id="counter" aria-live="polite"></span>
+      </div>
+      <div class="catalog-source" id="catalogSource" role="status" aria-live="polite">Carregando catálogo...</div>
+      <div class="collections" aria-label="Filtrar por universo">
+        <button class="collection-tile" type="button" data-select-game="Magic"><span><strong>Magic: The Gathering</strong><small>Magia, estratégia e cartas lendárias</small></span><span class="tile-icon" aria-hidden="true">✦</span></button>
+        <button class="collection-tile" type="button" data-select-game="Pokémon"><span><strong>Pokémon TCG</strong><small>Descobertas, nostalgia e criaturas incríveis</small></span><span class="tile-icon" aria-hidden="true">◈</span></button>
+      </div>
+      <div class="filters">
+        <input class="search" id="search" type="search" placeholder="⌕  Buscar uma carta pelo nome..." aria-label="Buscar cartas">
+        <select id="game" aria-label="Filtrar por jogo">
+          <option value="all">Todos os jogos</option><option value="Magic">Magic: The Gathering</option><option value="Pokémon">Pokémon TCG</option>
+        </select>
+        <select id="rarity" aria-label="Filtrar por raridade">
+          <option value="all">Todas as raridades</option>
+        </select>
+      </div>
+      <div class="grid" id="grid" aria-live="polite"></div>
+      <div class="contact" id="contato">
+        <div><h2>Vamos conversar sobre suas cartas?</h2><p>Quer comprar, vender, anunciar por comissão ou avaliar sua coleção? Fale com a Valiant TCG.</p></div>
+        <a class="btn btn-gold" data-whatsapp href="https://wa.me/5516996176955?text=Ol%C3%A1%2C%20tudo%20bem%3F%20Vim%20pelo%20site%20Valiant%20TCG%20e%20gostaria%20de%20saber%20mais%20informa%C3%A7%C3%B5es%20sobre%20o%20seguinte%20assunto%3A" target="_blank" rel="noopener noreferrer">Falar pelo WhatsApp <span aria-hidden="true">↗</span></a>
+      </div>
+    </section>
+  </main>
+  <footer class="footer"><div class="container footer-inner"><span>© <span id="year"></span> <strong>Valiant TCG</strong>. Um projeto independente de colecionáveis.</span><span>Magic e Pokémon pertencem a seus respectivos titulares. Catálogo ilustrativo, sem afiliação oficial. Arte de Magic: Scryfall, quando aplicável.</span></div></footer>
+  <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="modalName" aria-hidden="true">
+    <div class="modal" role="document">
+      <button class="close" id="close" aria-label="Fechar detalhes">✕</button>
+      <img id="modalImage" alt="">
+      <div><div class="eyebrow" id="modalGame"></div><h2 id="modalName"></h2><p id="modalDesc"></p><p id="modalMeta"></p><a class="btn btn-gold" id="modalContact" data-whatsapp href="https://wa.me/5516996176955?text=Ol%C3%A1%2C%20tudo%20bem%3F%20Vim%20pelo%20site%20Valiant%20TCG%20e%20gostaria%20de%20saber%20mais%20informa%C3%A7%C3%B5es%20sobre%20o%20seguinte%20assunto%3A" target="_blank" rel="noopener noreferrer">Consultar carta <span aria-hidden="true">↗</span></a><p class="note">Vitrine demonstrativa: imagem, preço e disponibilidade devem ser conferidos antes de qualquer negociação.</p></div>
+    </div>
+  </div>
+  <script src="assets/catalog-shared.js"></script>
+  <script>
+    // Atualiza sempre a cópia publicada de catalogo.js, sem usar o cache local do navegador.
+    // A URL varia a cada carregamento. Isso não substitui o envio do arquivo ao GitHub.
+    const publishedCatalogReady = new Promise(resolve => {
+      const script = document.createElement('script');
+      script.src = 'assets/catalogo.js?atualizacao=' + Date.now();
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.head.appendChild(script);
+    });
+  </script>
+  <script>
+  (async function iniciarVitrine() {
+    const publishedCatalogLoaded = await publishedCatalogReady;
+    // Telefone de atendimento da Valiant TCG: +55 (16) 99617-6955.
+    const WHATSAPP_NUMBER = '5516996176955';
+    const WHATSAPP_MESSAGE = 'Olá, tudo bem? Vim pelo site Valiant TCG e gostaria de saber mais informações sobre o seguinte assunto:';
+    const whatsappUrl = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(WHATSAPP_MESSAGE);
+    document.querySelectorAll('[data-whatsapp]').forEach(link => { link.href = whatsappUrl; });
+
+    // A foto do mascote é exibida no cabeçalho e no banner a partir de assets/foto-valiant.png.
+    // Caso a foto não carregue, mostramos a marca em vez de uma imagem quebrada.
+    const photoUrl = 'assets/foto-valiant.png';
+    const photoTest = new Image();
+    photoTest.onload = () => {
+      const hero = document.getElementById('heroPhoto');
+      const brand = document.getElementById('brandPhoto');
+      hero.src = photoUrl;
+      brand.src = photoUrl;
+      hero.hidden = false;
+      brand.hidden = false;
+      document.getElementById('heroPlaceholder').hidden = true;
+      document.querySelector('link[rel="icon"]').href = photoUrl;
+    };
+    photoTest.src = photoUrl;
+
+    // Vitrine pública SEMPRE usa catalogo.js; só ?preview=1 usa o armazenamento local.
+    // Nunca confundir prévia no navegador com o conteúdo efetivamente publicado.
+    const store = window.ValiantCatalog;
+    const preview = new URLSearchParams(window.location.search).get('preview') === '1';
+    const catalogDoc = preview ? store.get() : store.bundled();
+    const catalogSource = document.getElementById('catalogSource');
+    if (preview) {
+      catalogSource.classList.add('preview');
+      catalogSource.textContent = 'PRÉVIA LOCAL — estas alterações podem ainda não estar publicadas. Use “Exportar para o site” no painel para atualizar os visitantes.';
+    } else if (!publishedCatalogLoaded) {
+      catalogSource.classList.add('problem');
+      catalogSource.textContent = 'Não foi possível carregar assets/catalogo.js. Verifique se o arquivo existe no mesmo site e na pasta correta.';
+    } else {
+      const date = catalogDoc.updatedAt ? new Date(catalogDoc.updatedAt) : null;
+      const dateValid = date && !Number.isNaN(date.getTime());
+      catalogSource.textContent = 'CATÁLOGO PUBLICADO — ' + catalogDoc.items.length + ' registros' + (dateValid ? ' · Arquivo atualizado em ' + date.toLocaleString('pt-BR') : '') + '. Esta é a versão que os visitantes veem.';
+    }
+    const placeholder = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="420"><rect width="100%" height="100%" rx="17" fill="#213a2a"/><rect x="15" y="15" width="270" height="390" rx="12" fill="none" stroke="#efb45a" stroke-width="3"/><text x="150" y="195" text-anchor="middle" fill="#ffdf97" font-size="24" font-family="Georgia">VALIANT</text><text x="150" y="226" text-anchor="middle" fill="#ffdf97" font-size="24" font-family="Georgia">TCG</text></svg>');
+    let cards = catalogDoc.items;
+    const grid = document.getElementById('grid');
+    const search = document.getElementById('search');
+    const game = document.getElementById('game');
+    const rarity = document.getElementById('rarity');
+    const overlay = document.getElementById('overlay');
+    const closeButton = document.getElementById('close');
+    let priorFocus = null;
+    const cachedImages = new Map();
+    const e = store.safeText;
+    function updateRarityFilter(){
+      const current=rarity.value;
+      const candidates=game.value==='all'
+        ? [...new Set([...store.RARITIES['Pokémon'],...store.RARITIES['Magic']])]
+        : store.RARITIES[game.value];
+      rarity.replaceChildren(new Option('Todas as raridades','all'),...candidates.map(label=>new Option(label,label)),new Option('Não informada','Não informada'));
+      rarity.value=candidates.includes(current)||current==='Não informada'?current:'all';
+    }
+    game.addEventListener('change',()=>{updateRarityFilter();render();});
+
+    function imageFor(c) {return store.url(c.image) || cachedImages.get(c.scryfall) || placeholder;}
+    function inventory(c) {
+      if(c.demo) return '<span class="inventory-pill demo">Carta ilustrativa</span>';
+      return `<span class="inventory-pill">${e(c.condition || 'Conservação sob consulta')}</span><span class="inventory-pill ${c.quantity===0?'out':''}">${c.quantity ? c.quantity+' '+(c.quantity===1?'unidade':'unidades') : 'Esgotada'}</span>`;
+    }
+    function render() {
+      const q = search.value.trim().toLocaleLowerCase('pt-BR');
+      const match = cards.filter(c => c.published &&
+        (game.value === 'all' || c.game === game.value) &&
+        (rarity.value === 'all' || c.rarity === rarity.value) &&
+        (c.name + ' ' + c.set + ' ' + c.condition).toLocaleLowerCase('pt-BR').includes(q));
+      document.getElementById('counter').textContent = match.length + (match.length===1?' carta':' cartas');
+      grid.innerHTML = match.length ? match.map(c =>
+        `<article class="card" data-game="${e(c.game)}"><div class="artwrap"><span class="tag">${e(c.rarity)}</span><img src="${e(imageFor(c))}" alt="Carta ${e(c.name)}" loading="lazy"></div>`+
+        `<div class="info"><div class="game">${c.game === 'Magic' ? 'Magic: The Gathering' : 'Pokémon TCG'}</div><h3>${e(c.name)}</h3><div class="sub">${e(c.set)}</div>`+
+        `<div class="inventory-meta">${inventory(c)}</div><div class="cardbottom"><span class="price">${c.demo?'Preço demonstrativo':'Preço'}<strong>${c.demo?'Sob consulta':store.money(c.price)}</strong></span>`+
+        `<button class="detailbtn" type="button" data-id="${e(c.id)}">Ver detalhes ↗</button></div></div></article>`
+      ).join('') : '<div class="empty">Nenhuma carta encontrada. Experimente outro nome ou filtro.</div>';
+      grid.querySelectorAll('img').forEach(img => img.addEventListener('error', () => { if(img.src !== placeholder) img.src=placeholder; }, {once:true}));
+    }
+    function openCard(card) {
+      if(!card) return;
+      priorFocus = document.activeElement;
+      document.getElementById('modalImage').src = imageFor(card);
+      document.getElementById('modalImage').alt = 'Carta '+card.name;
+      document.getElementById('modalGame').textContent = card.game === 'Magic' ? 'Magic: The Gathering' : 'Pokémon TCG';
+      document.getElementById('modalName').textContent = card.name;
+      const descriptionEl=document.getElementById('modalDesc');
+      descriptionEl.textContent=card.description || '';
+      descriptionEl.hidden=!card.description;
+      document.getElementById('modalMeta').textContent =
+        card.set+' · '+card.rarity+(card.demo?' · Exemplo ilustrativo':' · Estado: '+(card.condition||'sob consulta')+' · '+(card.quantity ? 'Estoque: '+card.quantity : 'Esgotada')+' · '+store.money(card.price));
+      document.getElementById('modalContact').href = whatsappUrl;
+      overlay.classList.add('open');
+      overlay.setAttribute('aria-hidden','false');
+      document.body.style.overflow = 'hidden';
+      closeButton.focus();
+    }
+    function closeCard() {
+      overlay.classList.remove('open');
+      overlay.setAttribute('aria-hidden','true');
+      document.body.style.overflow = '';
+      if (priorFocus && priorFocus.isConnected) priorFocus.focus();
+    }
+    [search,game,rarity].forEach(el=>el.addEventListener('input',render));
+    grid.addEventListener('click',ev=>{const b=ev.target.closest('[data-id]');if(b) openCard(cards.find(c=>c.id===b.dataset.id));});
+    closeButton.addEventListener('click',closeCard);
+    overlay.addEventListener('click',ev=>{if(ev.target===overlay)closeCard();});
+    document.addEventListener('keydown',ev=>{
+      if(!overlay.classList.contains('open'))return;
+      if(ev.key==='Escape')closeCard();
+      if(ev.key==='Tab') {
+        const focusables=Array.from(overlay.querySelectorAll('a[href], button:not([disabled])'));
+        const first=focusables[0],last=focusables[focusables.length-1];
+        if(ev.shiftKey && document.activeElement===first){ev.preventDefault();last.focus();}
+        else if(!ev.shiftKey && document.activeElement===last){ev.preventDefault();first.focus();}
+      }
+    });
+    document.querySelectorAll('[data-filter]').forEach(a=>a.addEventListener('click',()=>{game.value=a.dataset.filter;updateRarityFilter();render();}));
+    document.querySelectorAll('[data-select-game]').forEach(b=>b.addEventListener('click',()=>{game.value=b.dataset.selectGame;search.value='';updateRarityFilter();rarity.value='all';render();document.querySelector('.filters').scrollIntoView({behavior:'smooth',block:'center'});}));
+    document.getElementById('year').textContent = new Date().getFullYear();
+    window.addEventListener('storage',ev=>{if(preview && ev.key===store.KEY){cards=store.get().items;render();}});
+    updateRarityFilter();
+    render();
+    // Fotos ilustrativas de Magic com a API pública do Scryfall (opcional).
+    Promise.all(cards.filter(c=>c.scryfall && !c.image).map(async c=>{
+      try {
+        const res=await fetch('https://api.scryfall.com/cards/named?exact='+encodeURIComponent(c.scryfall));
+        if(!res.ok)return;
+        const j=await res.json();
+        const img=j.image_uris?.normal || j.card_faces?.[0]?.image_uris?.normal;
+        if(img?.startsWith('https://'))cachedImages.set(c.scryfall,img);
+      } catch {}
+    })).then(render);
+  })();
+  </script>
+</body>
+</html>
