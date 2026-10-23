@@ -253,7 +253,7 @@
         <div><div class="eyebrow">Sua jornada começa aqui</div><h2>Explore as cartas</h2><p class="section-intro">Escolha um universo, encontre suas favoritas e descubra seus detalhes.</p></div>
         <span class="count" id="counter" aria-live="polite"></span>
       </div>
-      <div class="catalog-source" id="catalogSource" role="status" aria-live="polite">Carregando catálogo...</div>
+      <div class="catalog-source" id="catalogSource" role="status" aria-live="polite" hidden></div>
       <div class="collections" aria-label="Filtrar por universo">
         <button class="collection-tile" type="button" data-select-game="Magic"><span><strong>Magic: The Gathering</strong><small>Magia, estratégia e cartas lendárias</small></span><span class="tile-icon" aria-hidden="true">✦</span></button>
         <button class="collection-tile" type="button" data-select-game="Pokémon"><span><strong>Pokémon TCG</strong><small>Descobertas, nostalgia e criaturas incríveis</small></span><span class="tile-icon" aria-hidden="true">◈</span></button>
@@ -326,15 +326,13 @@
     const catalogDoc = preview ? store.get() : store.bundled();
     const catalogSource = document.getElementById('catalogSource');
     if (preview) {
+      catalogSource.hidden = false;
       catalogSource.classList.add('preview');
       catalogSource.textContent = 'PRÉVIA LOCAL — estas alterações podem ainda não estar publicadas. Use “Exportar para o site” no painel para atualizar os visitantes.';
     } else if (!publishedCatalogLoaded) {
+      catalogSource.hidden = false;
       catalogSource.classList.add('problem');
       catalogSource.textContent = 'Não foi possível carregar assets/catalogo.js. Verifique se o arquivo existe no mesmo site e na pasta correta.';
-    } else {
-      const date = catalogDoc.updatedAt ? new Date(catalogDoc.updatedAt) : null;
-      const dateValid = date && !Number.isNaN(date.getTime());
-      catalogSource.textContent = 'CATÁLOGO PUBLICADO — ' + catalogDoc.items.length + ' registros' + (dateValid ? ' · Arquivo atualizado em ' + date.toLocaleString('pt-BR') : '') + '. Esta é a versão que os visitantes veem.';
     }
     const placeholder = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="420"><rect width="100%" height="100%" rx="17" fill="#213a2a"/><rect x="15" y="15" width="270" height="390" rx="12" fill="none" stroke="#efb45a" stroke-width="3"/><text x="150" y="195" text-anchor="middle" fill="#ffdf97" font-size="24" font-family="Georgia">VALIANT</text><text x="150" y="226" text-anchor="middle" fill="#ffdf97" font-size="24" font-family="Georgia">TCG</text></svg>');
     let cards = catalogDoc.items;
