@@ -212,6 +212,20 @@
       .pagination { justify-content: center; }
       .pagination-info { text-align: center; }
     }
+
+    /* Filtro de valores e ordenação */
+    .price-range { display: flex; align-items: end; gap: 8px; flex: 1 1 255px; }
+    .price-range label { flex: 1 1 0; min-width: 105px; display: grid; gap: 5px; color: var(--muted); font-size: 11px; font-weight: 700; }
+    .price-range input { width: 100%; min-height: 48px; border-radius: 10px; padding: 12px; background: #1a2922; border: 1px solid #6a6d53; color: #fff3df; font-size: 13px; }
+    .price-range input:focus { border-color: var(--gold); outline: 2px solid rgba(239,180,90,.18); }
+    .price-range input::placeholder { color: #afa992; }
+    .price-separator { color: var(--muted); font-size: 12px; padding-bottom: 17px; }
+    .sort-field { display: grid; gap: 5px; flex: 1 1 192px; min-width: 180px; color: var(--muted); font-size: 11px; font-weight: 700; }
+    .sort-field select { min-height: 48px; max-width: 100%; width: 100%; font-size: 13px; }
+    @media (max-width: 560px) {
+      .price-range, .sort-field { flex-basis: 100%; width: 100%; }
+      .price-range label { min-width: 0; }
+    }
   </style>
 </head>
 <body>
@@ -227,7 +241,6 @@
         <a href="#catalogo" data-filter="Pokémon">Pokémon TCG</a>
         <a href="#contato">Contato</a>
       </nav>
-      <a class="btn btn-gold" href="#catalogo">Explorar cartas <span aria-hidden="true">↗</span></a>
     </div>
   </header>
   <main>
@@ -246,7 +259,6 @@
           <p class="services-contact">Para mais informações, avaliações ou negociações, entre em contato!</p>
           <div class="hero-actions" id="contato">
             <a class="btn btn-gold" data-whatsapp href="https://wa.me/5516996176955" target="_blank" rel="noopener noreferrer">Contato pelo WhatsApp <span aria-hidden="true">↗</span></a>
-            <a class="btn btn-outline" href="#catalogo">Explorar as cartas <span aria-hidden="true">↓</span></a>
           </div>
         </div>
         <div class="hero-image-frame">
@@ -274,6 +286,20 @@
         <select id="rarity" aria-label="Filtrar por raridade">
           <option value="all">Todas as raridades</option>
         </select>
+        <div class="price-range" role="group" aria-label="Filtrar por faixa de preço">
+          <label for="minPrice"><span>Preço mínimo (R$)</span><input type="number" id="minPrice" min="0" step="0.01" inputmode="decimal" placeholder="0,00"></label>
+          <span class="price-separator" aria-hidden="true">até</span>
+          <label for="maxPrice"><span>Preço máximo (R$)</span><input type="number" id="maxPrice" min="0" step="0.01" inputmode="decimal" placeholder="Sem limite"></label>
+        </div>
+        <label class="sort-field" for="sortBy"><span>Ordenar por</span>
+          <select id="sortBy" aria-label="Ordenar cartas">
+            <option value="default">Ordem do catálogo</option>
+            <option value="nameAsc">Nome: A–Z</option>
+            <option value="nameDesc">Nome: Z–A</option>
+            <option value="priceAsc">Preço: menor primeiro</option>
+            <option value="priceDesc">Preço: maior primeiro</option>
+          </select>
+        </label>
       </div>
       <div class="grid" id="grid" aria-live="polite"></div>
       <div class="pagination-wrap">
@@ -351,6 +377,9 @@
     const search = document.getElementById('search');
     const game = document.getElementById('game');
     const rarity = document.getElementById('rarity');
+    const minPrice = document.getElementById('minPrice');
+    const maxPrice = document.getElementById('maxPrice');
+    const sortBy = document.getElementById('sortBy');
     const pagination = document.getElementById('pagination');
     const paginationInfo = document.getElementById('paginationInfo');
     const overlay = document.getElementById('overlay');
@@ -389,10 +418,22 @@
     function render() {
       updateFilterHighlights();
       const q = search.value.trim().toLocaleLowerCase('pt-BR');
-      const match = cards.filter(c => c.published &&
-        (game.value === 'all' || c.game === game.value) &&
-        (rarity.value === 'all' || c.rarity === rarity.value) &&
-        (c.name + ' ' + c.set + ' ' + c.condition).toLocaleLowerCase('pt-BR').includes(q));
+      const minValue = minPrice.value !== '' && Number.isFinite(minPrice.valueAsNumber) ? Math.max(0, minPrice.valueAsNumber) : null;
+      const maxValue = maxPrice.value !== '' && Number.isFinite(maxPrice.valueAsNumber) ? Math.max(0, maxPrice.valueAsNumber) : null;
+      const match = cards.filter(c => {
+        const price = Number(c.price);
+        return c.published &&
+          (game.value === 'all' || c.game === game.value) &&
+          (rarity.value === 'all' || c.rarity === rarity.value) &&
+          (c.name + ' ' + c.set + ' ' + c.condition).toLocaleLowerCase('pt-BR').includes(q) &&
+          (minValue === null || (Number.isFinite(price) && price >= minValue)) &&
+          (maxValue === null || (Number.isFinite(price) && price <= maxValue));
+      });
+      const compareNames = (a,b) => String(a.name || '').localeCompare(String(b.name || ''), 'pt-BR', {sensitivity:'base',numeric:true});
+      if (sortBy.value === 'nameAsc') match.sort(compareNames);
+      else if (sortBy.value === 'nameDesc') match.sort((a,b) => -compareNames(a,b));
+      else if (sortBy.value === 'priceAsc') match.sort((a,b) => (Number(a.price) - Number(b.price)) || compareNames(a,b));
+      else if (sortBy.value === 'priceDesc') match.sort((a,b) => (Number(b.price) - Number(a.price)) || compareNames(a,b));
       document.getElementById('counter').textContent = match.length + (match.length===1?' carta':' cartas');
       const totalPages = Math.max(1, Math.ceil(match.length / PAGE_SIZE));
       if (currentPage > totalPages) currentPage = totalPages;
@@ -456,7 +497,8 @@
       if (priorFocus && priorFocus.isConnected) priorFocus.focus();
     }
     const resetAndRender = () => { currentPage = 1; render(); };
-    [search,game,rarity].forEach(el=>el.addEventListener('input',resetAndRender));
+    [search,game,rarity,minPrice,maxPrice,sortBy].forEach(el=>el.addEventListener('input',resetAndRender));
+    [minPrice,maxPrice,sortBy].forEach(el=>el.addEventListener('change',resetAndRender));
     grid.addEventListener('click',ev=>{const b=ev.target.closest('[data-id]');if(b) openCard(cards.find(c=>c.id===b.dataset.id));});
     closeButton.addEventListener('click',closeCard);
     overlay.addEventListener('click',ev=>{if(ev.target===overlay)closeCard();});
