@@ -118,7 +118,7 @@
     const item=cards.find(c=>c.id===button.dataset.id);if(!item)return;
     switch(button.dataset.action){
       case 'edit':edit(item);break;
-      case 'duplicate':edit({...item,id:null,condition:'',price:null,quantity:0,demo:false,published:false});break;
+      case 'duplicate':edit({...item,id:null,condition:'',price:null,quantity:0,demo:false,published:true});break;
       case 'delete':if(confirm(`Excluir “${item.name}” (${item.condition||'sem estado'}) do catálogo local?`)){cards=cards.filter(c=>c.id!==item.id);persist('Registro excluído do catálogo local.');}break;
     }
   });
@@ -161,8 +161,8 @@
   });
   // O seletor TCGdex usa este método para abrir o cadastro já preenchido.
   window.ValiantAdmin = Object.freeze({
-    prefillPokemon(data){edit(null,{...data,game:'Pokémon',condition:'',price:null,quantity:0,published:false,demo:false});},
-    prefillMagic(data){edit(null,{...data,game:'Magic',condition:'',price:null,quantity:0,published:false,demo:false,description:''});}
+    prefillPokemon(data){edit(null,{...data,game:'Pokémon',condition:'',price:null,quantity:0,published:true,demo:false});},
+    prefillMagic(data){edit(null,{...data,game:'Magic',condition:'',price:null,quantity:0,published:true,demo:false,description:''});}
   });
   window.addEventListener('storage',ev=>{if(ev.key===store.KEY){cards=store.get().items;render();}});
   render();
