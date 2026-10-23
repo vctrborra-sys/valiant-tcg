@@ -59,6 +59,7 @@
       game: item.game === 'Pokémon' ? 'Pokémon' : 'Magic',
       name,
       set: str(item.set,140),
+      language: str(item.language,60),
       rarity: (item.game === 'Pokémon' && str(item.rarity,40) === 'Ultra Raras' ? 'Ultra Rara' : str(item.rarity,40)) || 'Não informada',
       condition: CONDITIONS.includes(item.condition) ? item.condition : '',
       price: price !== null && Number.isFinite(price) && price >= 0 ? Math.round(price*100)/100 : null,
