@@ -400,7 +400,7 @@
     function imageFor(c) {return store.url(c.image) || cachedImages.get(c.scryfall) || placeholder;}
     function inventory(c) {
       if(c.demo) return '<span class="inventory-pill demo">Carta ilustrativa</span>';
-      return `<span class="inventory-pill">${e(c.condition || 'Conservação sob consulta')}</span><span class="inventory-pill ${c.quantity===0?'out':''}">${c.quantity ? c.quantity+' '+(c.quantity===1?'unidade':'unidades') : 'Esgotada'}</span>`;
+      return `<span class="inventory-pill">${e(c.condition || 'Conservação sob consulta')}</span>${c.language ? `<span class="inventory-pill">${e(c.language)}</span>` : ''}<span class="inventory-pill ${c.quantity===0?'out':''}">${c.quantity ? c.quantity+' '+(c.quantity===1?'unidade':'unidades') : 'Esgotada'}</span>`;
     }
     function updateFilterHighlights() {
       document.querySelectorAll('[data-select-game]').forEach(button => {
@@ -481,7 +481,7 @@
       descriptionEl.textContent=card.description || '';
       descriptionEl.hidden=!card.description;
       document.getElementById('modalMeta').textContent =
-        card.set+' · '+card.rarity+(card.demo?' · Exemplo ilustrativo':' · Estado: '+(card.condition||'sob consulta')+' · '+(card.quantity ? 'Estoque: '+card.quantity : 'Esgotada')+' · '+store.money(card.price));
+        card.set+' · '+card.rarity+(card.language?' · Idioma: '+card.language:'')+(card.demo?' · Exemplo ilustrativo':' · Estado: '+(card.condition||'sob consulta')+' · '+(card.quantity ? 'Estoque: '+card.quantity : 'Esgotada')+' · '+store.money(card.price));
       const condition = card.condition || 'sob consulta';
       const cardMessage = `Olá, tudo bem? Vim pelo site Valiant TCG e gostaria de saber mais sobre a carta ${card.name}, edição ${card.set}, condição ${condition}.`;
       document.getElementById('modalContact').href = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(cardMessage);
