@@ -15,6 +15,7 @@ BASE_URL = 'https://raw.githubusercontent.com/vctrborra-sys/valiant-tcg/main/win
 FILES = (
     'app.py', 'nomes_pt.py', 'static/painel.js',
     'static/painel.css', 'templates/admin.html',
+    'VERIFICAR_TOKEN_GITHUB.bat',
 )
 
 
