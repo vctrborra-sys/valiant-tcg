@@ -604,14 +604,48 @@ def validate_github_token(token):
         return False,'Resposta inesperada do GitHub. Nenhum token foi alterado.'
 
 
+def read_github_token():
+    """Solicita o token numa janela de senha com suporte real a Ctrl+V no Windows.
+
+    Não imprime, salva em arquivo, registra em logs nem lê a área de transferência
+    automaticamente. Se a interface gráfica não estiver disponível, utiliza o
+    terminal com instrução específica sobre colagem.
+    """
+    try:
+        import tkinter as tk
+        from tkinter import simpledialog
+        window=tk.Tk()
+        window.withdraw()
+        window.attributes('-topmost',True)
+        try:
+            token=simpledialog.askstring(
+                'Valiant TCG — Token GitHub',
+                'Cole o token do GitHub (Ctrl+V).\\n'
+                'O código ficará oculto. Clique em OK para verificar.',
+                parent=window,show='*')
+        finally:
+            window.destroy()
+        return (token or '').strip()
+    except (ImportError, RuntimeError, OSError, ValueError, tk.TclError) as exc:
+        print('Não foi possível abrir a janela gráfica. Usando o terminal.')
+        print('ATENÇÃO: neste campo de senha do Windows, Ctrl+V pode falhar.')
+        print('Clique com o botão DIREITO ou use o menu da janela para colar.')
+        return getpass.getpass('Cole o token GitHub (entrada oculta): ').strip()
+
+
 def configure_github():
     print('VALIANT TCG — CONFIGURAR TOKEN DO GITHUB')
     print('Repositório: vctrborra-sys/valiant-tcg')
     print('Permissão necessária: Contents (Read and write).')
     print('Execute este arquivo normalmente, com o mesmo usuário do Windows que abre o painel.')
-    token=getpass.getpass('Cole o token GitHub (entrada oculta): ').strip()
+    token=read_github_token()
     if not token:
         print('Nenhum token informado. Credencial anterior mantida.');return
+    if any(ord(ch)<32 for ch in token):
+        print('A entrada contém caracteres de controle e não é um token válido.')
+        print('No terminal do Windows, Ctrl+V pode inserir um caractere inválido em entradas ocultas.')
+        print('Use a janela de colagem ou, se ela não abrir, clique com o botão direito para colar.')
+        return
     print('Verificando o token no GitHub, sem mostrar o código...')
     ok,message=validate_github_token(token)
     print(message)
