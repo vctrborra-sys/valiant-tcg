@@ -89,35 +89,40 @@ async function pokemonSetNames(){
 async function getPokemonPrints(query,preview,version){
   const fragment=getSearchFragment(query);
   const setNames=await pokemonSetNames();
-  let results=[];
-  let language='pt';
-  for(const lang of ['pt','en']){
+  // Mescla os idiomas para mostrar impressões que ainda não foram localizadas.
+  // Uma impressão encontrada em português substitui a equivalente em inglês.
+  const byId=new Map();
+  for(const lang of ['en','pt']){
     let page=1;
-    const found=[];
     while(page <= (preview?1:20)){
       const params=new URLSearchParams({'name':'like:'+fragment,'pagination:page':String(page),'pagination:itemsPerPage':'160'});
       const response=await fetch('https://api.tcgdex.net/v2/'+lang+'/cards?'+params.toString());
-      if(!response.ok)throw Error('TCGdex não conseguiu carregar as impressões ('+lang+').');
+      if(!response.ok){
+        if(lang==='en')continue;
+        if(!byId.size)throw Error('TCGdex não conseguiu carregar as impressões.');
+        break;
+      }
       const batch=await response.json();
       if(version!==printSearchVersion)return [];
       if(!Array.isArray(batch))break;
-      found.push(...batch.filter(x=>fitsQuery(x.name,query)));
+      for(const card of batch){
+        if(card.id&&fitsQuery(card.name,query))byId.set(card.id,{...card,tcgdexLanguage:lang});
+      }
       if(batch.length<160)break;
       page++;
     }
-    if(found.length){results=found;language=lang;break;}
   }
-  return results.map(card=>{
+  return [...byId.values()].map(card=>{
     const code=card.id?.split('-')[0]||'';
     const number=card.localId||card.id?.slice(code.length+1)||'';
     return {
       game:'Pokémon',name:card.name,edition:(setNames.get(code)||code),number,
       set:[setNames.get(code)||code,number].filter(Boolean).join(' · '),
       image:card.image?card.image+'/high.webp':'',
-      tcgdexId:card.id,tcgdexLanguage:language,rarity:'Rara',
-      printLang:language,printKey:'poke:'+card.id
+      tcgdexId:card.id,tcgdexLanguage:card.tcgdexLanguage,rarity:'Rara',
+      printLang:card.tcgdexLanguage,printKey:'poke:'+card.id
     };
-  });
+  }).sort((a,b)=>a.edition.localeCompare(b.edition,'pt-BR')||a.number.localeCompare(b.number,'pt-BR',{numeric:true}));
 }
 async function getLocalizedMagicName(query){
   try {
@@ -137,7 +142,7 @@ async function getMagicPrints(query,preview,version){
   const searchParts=terms.map(term=>'name:"'+term.replace(/["\\]/g,'')+'"');
   if(code)searchParts.push('set:'+code.replace(/[^a-z0-9]/g,''));
   searchParts.push('lang:'+lang);
-  const params=new URLSearchParams({q:searchParts.join(' '),unique:'prints',order:'released',dir:'desc',include_multilingual:'true'});
+  const params=new URLSearchParams({q:searchParts.join(' '),unique:'prints',order:'released',dir:'desc',include_multilingual:'true',include_variations:'true'});
   let url='https://api.scryfall.com/cards/search?'+params.toString();
   const prints=[];
   let page=0;
