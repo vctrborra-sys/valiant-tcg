@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf }}">
+  <title>Valiant TCG | Central Administrativa Windows</title>
+  <link rel="stylesheet" href="/static/painel.css">
+  <script src="/static/painel.js" defer></script>
+</head>
+<body>
+  <header class="top"><div class="header-wrap"><div class="logo"><div class="crest">V</div><div><b>VALIANT <span>TCG</span></b><small>Central de administração · Windows</small></div></div><div class="account"><span id="account-name"></span><a target="_blank" rel="noopener" href="https://vctrborra-sys.github.io/valiant-tcg/">Ver vitrine ↗</a><button id="logout" class="subtle" hidden>Sair</button></div></div></header>
+  <main>
+    <section id="login-screen" class="login-panel"><div class="eyebrow">Acesso protegido</div><h1>Gerencie sua coleção.</h1><p>Acesse o painel local para manter seus preços, estoque e histórico atualizados.</p><form id="login-form"><label>Usuário<input autocomplete="username" id="login-user" required placeholder="Borra"></label><label>Senha<input autocomplete="current-password" type="password" id="login-pass" required></label><button class="primary" type="submit">Entrar no painel →</button></form><p class="hint" id="install-hint" hidden>Primeiro execute <code>INSTALAR_WINDOWS.bat</code> e crie a conta Borra.</p></section>
+    <section id="dashboard" hidden><div class="intro"><div><div class="eyebrow">Painel administrativo</div><h1>Seu estoque, organizado.</h1><p>Cadastre, edite e sincronize cartas de Pokémon e Magic no GitHub Pages.</p></div><div class="publish"><div class="publish-line"><span class="dot"></span><strong id="sync-state">Verificando...</strong></div><div id="sync-info" class="muted">Repositório: vctrborra-sys/valiant-tcg</div><button class="primary" id="publish-now">Publicar agora no GitHub ↗</button></div></div>
+      <nav class="tabs" aria-label="Áreas do painel"><button data-tab="collection" class="active">Coleção</button><button data-tab="history">Histórico</button><button data-tab="users">Usuários</button><button data-tab="settings">Minha conta</button></nav>
+      <div id="message" role="status" aria-live="polite"></div>
+      <section id="tab-collection"><div class="panel-heading"><div><h2>Cartas cadastradas <span class="count" id="cards-count"></span></h2><p>Todos os usuários podem editar qualquer carta. O autor original continua registrado.</p></div><button class="primary" id="new-card">+ Cadastrar carta</button></div><div class="toolbar"><input id="filter-name" placeholder="Buscar carta pelo nome ou edição..." aria-label="Filtrar cartas"><select id="filter-game"><option value="">Todos os jogos</option><option>Pokémon</option><option>Magic</option></select></div><div class="table-wrap"><table><thead><tr><th>Carta</th><th>Jogo</th><th>Conservação</th><th>Preço</th><th>Qtd.</th><th>Cadastrado por</th><th>Vitrine</th><th>Ações</th></tr></thead><tbody id="cards-body"></tbody></table></div></section>
+      <section id="tab-history" hidden><div class="panel-heading"><div><h2>Histórico de alterações</h2><p>Quem fez cada operação, quando e o que foi alterado. As exclusões também permanecem registradas.</p></div></div><div id="audit-list" class="history"></div></section>
+      <section id="tab-users" hidden><div class="panel-heading"><div><h2>Usuários do sistema</h2><p>Cada usuário possui sua própria senha e identificação no histórico.</p></div></div><div id="users-list" class="users-list"></div><div id="user-create"><h3>Criar usuário</h3><form id="user-form" class="inline-form"><label>Nome de usuário<input id="new-username" required minlength="3" maxlength="32" autocomplete="off"></label><label>Senha inicial<input id="new-userpass" type="password" minlength="12" required autocomplete="new-password"></label><label>Perfil<select id="new-role"><option value="editor">Editor</option><option value="proprietario">Proprietário</option></select></label><button class="primary" type="submit">Criar conta</button></form></div></section>
+      <section id="tab-settings" hidden><h2>Minha conta</h2><p>Troque sua senha regularmente. O banco de dados fica somente no computador Windows.</p><form id="password-form" class="inline-form"><label>Senha atual<input id="old-password" required type="password" autocomplete="current-password"></label><label>Nova senha<input id="new-password" required type="password" minlength="12" autocomplete="new-password"></label><button class="primary" type="submit">Trocar senha</button></form><p class="hint">O token do GitHub é configurado pelo arquivo <code>CONFIGURAR_GITHUB.bat</code>, sem ser exibido neste painel.</p></section>
+    </section>
+  </main>
+  <dialog id="card-dialog"><form id="card-form"><div class="dialog-head"><div><span class="eyebrow">Estoque Valiant</span><h2 id="dialog-title">Cadastrar carta</h2></div><button type="button" id="cancel-x" class="subtle" aria-label="Fechar">✕</button></div><div class="search-block"><h3>Busca em bases de cartas (opcional)</h3><p id="search-tip">Pesquise no TCGdex ou no Scryfall e selecione a impressão desejada.</p><div class="search-fields"><input id="api-search" placeholder="Ex.: Charizard / Sol Ring" aria-label="Nome da carta a pesquisar"><button type="button" class="secondary" id="api-search-btn">Pesquisar</button></div><div id="api-results" class="api-results"></div></div>
+  <div class="fields">
+    <label>Jogo<select id="card-game"><option>Pokémon</option><option>Magic</option></select></label>
+    <label>Nome da carta<input id="card-name" required maxlength="120"></label>
+    <label>Edição / número<input id="card-set" maxlength="140" placeholder="Ex.: Base Set · 4/102"></label>
+    <label>Raridade<select id="card-rarity" required></select></label>
+    <label>Conservação<select id="card-condition" required><option>NM</option><option>SP</option><option>MP</option><option>HP</option><option>D</option></select></label>
+    <label>Idioma da carta *<input id="card-language" list="language-options" maxlength="60" required placeholder="Selecione ou digite o idioma" autocomplete="off"><datalist id="language-options"><option value="Português"><option value="Inglês"><option value="Espanhol"><option value="Japonês"><option value="Francês"><option value="Alemão"><option value="Italiano"><option value="Coreano"><option value="Chinês simplificado"><option value="Chinês tradicional"><option value="Russo"><option value="Indonésio"><option value="Tailandês"></datalist></label>
+    <label>Preço (R$)<input id="card-price" type="number" min="0" step="0.01" required value="0"></label>
+    <label>Quantidade<input id="card-quantity" type="number" min="0" step="1" required value="1"></label>
+    <label>URL da imagem<input id="card-image" type="url" placeholder="https://..."></label>
+    <label class="wide">Descrição / observações (opcional)<textarea id="card-description" rows="3" maxlength="1200" placeholder=""></textarea></label>
+    <label class="checkbox wide"><input id="card-published" type="checkbox" checked> Exibir na vitrine (padrão)</label>
+  </div><div class="dialog-actions"><button type="button" class="subtle" id="cancel-form">Cancelar</button><button type="submit" class="primary">Salvar carta</button></div></form></dialog>
+</body></html>
