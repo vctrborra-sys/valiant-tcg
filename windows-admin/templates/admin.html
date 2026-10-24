@@ -5,7 +5,7 @@
   <meta name="csrf-token" content="{{ csrf }}">
   <title>Valiant TCG | Central Administrativa Windows</title>
   <link rel="stylesheet" href="/static/painel.css">
-  <script src="/static/painel.js" defer></script>
+  <script src="/static/painel.js?v=20261024-impressoes-separadas" defer></script>
 </head>
 <body>
   <header class="top"><div class="header-wrap"><div class="logo"><div class="crest">V</div><div><b>VALIANT <span>TCG</span></b><small>Central de administração · Windows</small></div></div><div class="account"><span id="account-name"></span><a target="_blank" rel="noopener" href="https://vctrborra-sys.github.io/valiant-tcg/">Ver vitrine ↗</a><button id="logout" class="subtle" hidden>Sair</button></div></div></header>
@@ -20,7 +20,33 @@
       <section id="tab-settings" hidden><h2>Minha conta</h2><p>Troque sua senha regularmente. O banco de dados fica somente no computador Windows.</p><form id="password-form" class="inline-form"><label>Senha atual<input id="old-password" required type="password" autocomplete="current-password"></label><label>Nova senha<input id="new-password" required type="password" minlength="12" autocomplete="new-password"></label><button class="primary" type="submit">Trocar senha</button></form><p class="hint">O token do GitHub é configurado pelo arquivo <code>CONFIGURAR_GITHUB.bat</code>, sem ser exibido neste painel.</p></section>
     </section>
   </main>
-  <dialog id="card-dialog"><form id="card-form"><div class="dialog-head"><div><span class="eyebrow">Estoque Valiant</span><h2 id="dialog-title">Cadastrar carta</h2></div><button type="button" id="cancel-x" class="subtle" aria-label="Fechar">✕</button></div><div class="search-block"><h3>Busca inteligente de cartas</h3><p id="search-tip">Digite qualquer parte do nome, inclusive a segunda palavra, em português ou inglês. Os nomes completos aparecerão automaticamente.</p><div class="search-fields"><input id="api-search" placeholder="Ex.: Zoroark, Ring, Arcanjo..." aria-label="Pesquisar por qualquer palavra do nome da carta" aria-autocomplete="list" aria-controls="api-results" aria-expanded="false" autocomplete="off" spellcheck="false"><button type="button" class="secondary" id="api-search-btn">Pesquisar</button></div><div id="api-results" class="api-results" aria-live="polite"></div></div>
+  <dialog id="card-dialog"><form id="card-form"><div class="dialog-head"><div><span class="eyebrow">Estoque Valiant</span><h2 id="dialog-title">Cadastrar carta</h2></div><button type="button" id="cancel-x" class="subtle" aria-label="Fechar">✕</button></div><div class="search-block">
+      <h3>Pesquisar cartas e escolher a impressão</h3>
+      <div class="search-game-tabs" role="tablist" aria-label="Escolha a base de cartas">
+        <button type="button" role="tab" class="active" id="search-tab-pokemon" aria-selected="true" data-search-game="Pokémon">◈ Pokémon TCG</button>
+        <button type="button" role="tab" id="search-tab-magic" aria-selected="false" data-search-game="Magic">✦ Magic: The Gathering</button>
+      </div>
+      <div class="search-print-fields">
+        <label class="print-name-field">Nome da carta
+          <input id="api-search" placeholder="Ex.: Pikachu, Zoroark..." autocomplete="off" spellcheck="false" aria-label="Nome da carta a pesquisar">
+        </label>
+        <label id="magic-set-field" hidden>Código da coleção (opcional)
+          <input id="magic-set-code" placeholder="Ex.: sld, mh3, 2xm" maxlength="12" autocomplete="off" spellcheck="false">
+        </label>
+        <label id="magic-lang-field" hidden>Idioma da impressão
+          <select id="magic-print-lang" aria-label="Idioma da impressão encontrada">
+            <option value="en">Inglês</option><option value="pt">Português</option>
+            <option value="es">Espanhol</option><option value="ja">Japonês</option>
+            <option value="fr">Francês</option><option value="de">Alemão</option><option value="it">Italiano</option>
+          </select>
+        </label>
+      </div>
+      <button type="button" class="primary search-action" id="api-search-btn">⌕ Buscar Pokémon</button>
+      <p id="search-tip">Veja as imagens, edições e números disponíveis. Clique na impressão correta para cadastrar. O idioma físico da carta é definido abaixo.</p>
+      <div id="search-status" class="search-results-status" role="status" aria-live="polite"></div>
+      <div id="api-results" class="api-results print-results" aria-label="Impressões encontradas"></div>
+      <button type="button" id="more-prints" class="secondary more-prints" hidden>Mostrar mais impressões</button>
+    </div>
   <div class="fields">
     <input id="card-game" type="hidden" value="Pokémon">
     <label>Nome da carta<input id="card-name" required maxlength="120"></label>
