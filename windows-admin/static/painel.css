@@ -9,3 +9,31 @@
 .api-results:empty{display:none}
 .api-results .search-feedback{font-size:12px;color:var(--muted);padding:7px 0}
 @media(max-width:560px){.search-fields{flex-wrap:wrap}.search-fields input{min-width:0}.search-suggestions{gap:7px}}
+
+/* Pesquisa por impressão: layout Magic/Pokémon com todas as artes e edições */
+dialog#card-dialog{width:min(1120px,calc(100vw - 24px));}
+.search-game-tabs{display:flex;gap:9px;margin:14px 0;flex-wrap:wrap}
+.search-game-tabs button{flex:1 1 180px;min-width:0;border:1px solid #788264;background:#162e25;color:#dcc8a7;padding:13px 15px;font-weight:800}
+.search-game-tabs button.active{border-color:#f5c67a;color:#2c2011;background:linear-gradient(115deg,#f9d58c,#dca351)}
+.search-print-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(145px,.38fr) minmax(155px,.38fr);gap:10px;align-items:end}
+.search-print-fields label{display:grid;gap:6px;font-size:12px;font-weight:700;color:#e5d5b5}
+.search-print-fields input,.search-print-fields select{min-height:46px}
+.search-print-fields .print-name-field{grid-column:auto}
+.search-block [hidden]{display:none!important}
+.search-action{width:100%;margin-top:11px}
+.search-results-status{color:#d3c19d;font-size:12px;line-height:1.55;margin-top:14px}
+.print-results{display:grid;grid-template-columns:repeat(auto-fill,minmax(142px,1fr));gap:10px;overflow:visible;max-height:none;margin-top:10px}
+.print-card{display:flex;flex-direction:column;gap:6px;min-width:0;width:100%;text-align:left;background:#1a3126;border:1px solid #708059;padding:10px;border-radius:11px;color:var(--cream)}
+.print-card:hover,.print-card:focus-visible{border-color:var(--gold);background:#2c4630;transform:translateY(-2px)}
+.print-card img{width:100%;height:190px;object-fit:contain;background:#0f2119;border-radius:7px}
+.print-card strong{font-size:12px;line-height:1.4;min-height:32px}
+.print-card small{color:#d6c5a2;font-size:11px;line-height:1.4}
+.print-card .print-card-action{color:#ffdc91;font-weight:700;margin-top:auto}
+.print-placeholder{height:190px;display:grid;place-items:center;color:#b1ac91;font-size:12px}
+.more-prints{display:block;width:100%;margin-top:15px}
+@media(max-width:720px){
+ .search-print-fields{grid-template-columns:1fr 1fr}
+ .search-print-fields .print-name-field{grid-column:1/-1}
+ .print-results{grid-template-columns:repeat(auto-fill,minmax(115px,1fr))}
+ .print-card img,.print-placeholder{height:154px}
+}
