@@ -567,15 +567,76 @@ def reset_borra_password():
     print('Senha de Borra redefinida. Agora abra INICIAR_PAINEL.bat.')
 
 
+def validate_github_token(token):
+    """Confirma autenticação e leitura do catálogo sem modificar o GitHub.
+
+    Por segurança, nunca devolve o token, corpo da API nem cabeçalhos.
+    A permissão de escrita é verificada apenas na publicação efetiva.
+    """
+    if not token:
+        return False, 'Nenhum token está configurado.'
+    try:
+        user=github_request('GET','https://api.github.com/user',token)
+        if not user.get('login'):
+            return False,'GitHub não confirmou o usuário do token.'
+        catalog_url=f'https://api.github.com/repos/{REPO}/contents/{GITHUB_FILE}?ref={BRANCH}'
+        catalog=github_request('GET',catalog_url,token)
+        if not catalog.get('sha'):
+            return False,'O GitHub não confirmou acesso ao arquivo do catálogo.'
+        return True,('Token autenticado para '+user['login']+
+                     '. Acesso de leitura ao catálogo confirmado. '+
+                     'A permissão Contents: Read and write será confirmada ao publicar.')
+    except HTTPError as exc:
+        if exc.code == 401:
+            return False,('HTTP 401: o GitHub recusou o token. Confira se o código '+
+                          'foi copiado integralmente, se não expirou nem foi revogado. '+
+                          'Use um novo token, se necessário.')
+        if exc.code == 403:
+            return False,('HTTP 403: o token foi recusado por restrição ou permissão. '+
+                          'Confira o proprietário e o acesso ao repositório.')
+        if exc.code == 404:
+            return False,('HTTP 404: repositório ou catálogo inacessível para esse token. '+
+                          'Selecione vctrborra-sys/valiant-tcg em Only select repositories.')
+        return False,'GitHub respondeu com HTTP '+str(exc.code)+'.'
+    except (URLError, TimeoutError):
+        return False,'Não foi possível alcançar a API do GitHub. Confira a conexão de internet.'
+    except (KeyError, ValueError):
+        return False,'Resposta inesperada do GitHub. Nenhum token foi alterado.'
+
+
 def configure_github():
-    print('Configure um fine-grained PAT restrito ao repositório vctrborra-sys/valiant-tcg')
+    print('VALIANT TCG — CONFIGURAR TOKEN DO GITHUB')
+    print('Repositório: vctrborra-sys/valiant-tcg')
     print('Permissão necessária: Contents (Read and write).')
+    print('Execute este arquivo normalmente, com o mesmo usuário do Windows que abre o painel.')
     token=getpass.getpass('Cole o token GitHub (entrada oculta): ').strip()
     if not token:
-        print('Nenhum token informado.');return
+        print('Nenhum token informado. Credencial anterior mantida.');return
+    print('Verificando o token no GitHub, sem mostrar o código...')
+    ok,message=validate_github_token(token)
+    print(message)
+    if not ok:
+        print('O token NÃO foi salvo; corrija-o e execute novamente CONFIGURAR_GITHUB.bat.')
+        return
     import keyring
     keyring.set_password(KEYRING_SERVICE,KEYRING_NAME,token)
-    print('Token guardado no Gerenciador de Credenciais do Windows. Não foi escrito no código.')
+    print('Token salvo com segurança no Gerenciador de Credenciais do Windows.')
+    print('Agora clique em Publicar agora no GitHub no painel.')
+
+
+def check_github():
+    print('VALIANT TCG — TESTE DE AUTENTICAÇÃO GITHUB')
+    token=get_token()
+    if not token:
+        print('Nenhum token encontrado para esta conta do Windows.')
+        print('Execute CONFIGURAR_GITHUB.bat sem usar Executar como administrador.')
+        return
+    ok,message=validate_github_token(token)
+    print(message)
+    if not ok:
+        print('Execute CONFIGURAR_GITHUB.bat para substituir a credencial com erro.')
+    else:
+        print('Se a publicação ainda falhar com HTTP 403, confira Contents: Read and write.')
 
 
 def main():
@@ -587,6 +648,8 @@ def main():
         reset_borra_password();return
     if len(sys.argv)>1 and sys.argv[1]=='github':
         configure_github();return
+    if len(sys.argv)>1 and sys.argv[1]=='github-check':
+        check_github();return
     if len(sys.argv)>1 and sys.argv[1]=='backup':
         backup_db();print('Backup salvo em dados/backups');return
     if len(sys.argv)>1 and sys.argv[1]=='start':
