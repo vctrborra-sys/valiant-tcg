@@ -21,6 +21,8 @@ from uuid import uuid4
 from flask import Flask, abort, jsonify, redirect, render_template, request, session
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from nomes_pt import suggest_names as query_portuguese_names
+
 BASE = Path(__file__).resolve().parent
 DATA = BASE / 'dados'
 DATA.mkdir(exist_ok=True)
@@ -216,6 +218,16 @@ def login():
 def logout():
     session.clear()
     return jsonify(ok=True)
+
+
+@app.get('/api/search/nomes-pt')
+def search_portuguese_names():
+    with db() as c:
+        require_user(c)
+    query=str(request.args.get('q',''))[:90]
+    if len(query.strip())<2:
+        return jsonify(items=[],status='idle')
+    return jsonify(query_portuguese_names(DATA, query))
 
 
 @app.get('/api/cards')
