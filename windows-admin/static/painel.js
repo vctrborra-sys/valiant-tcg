@@ -39,7 +39,7 @@ function syncGameFromRarity(){
 }
 $('card-rarity').addEventListener('change',syncGameFromRarity);
 $('new-card').addEventListener('click',()=>openForm());
-function openForm(card=null){editId=card?.id||null;extras=card?Object.fromEntries(['tcgdexId','tcgdexLanguage','scryfall','scryfallId','scryfallSet','scryfallNumber','scryfallLanguage'].map(k=>[k,card[k]||''])):{};$('dialog-title').textContent=card?'Editar carta':'Cadastrar carta';$('card-game').value=card?.game||'Pokémon';updateRarities(card?.game||'Pokémon',card?.rarity||'Comum');for(const [k,v] of Object.entries({name:card?.name||'',set:card?.set||'',condition:card?.condition||'NM',price:card?.price??0,quantity:card?.quantity??1,image:card?.image||'',description:card?.description||'',language:card?.language||''}))$('card-'+k).value=v;$('card-published').checked=card?.published!==false;$('api-search').value='';$('api-results').replaceChildren();$('card-dialog').showModal();}
+function openForm(card=null){editId=card?.id||null;extras=card?Object.fromEntries(['tcgdexId','tcgdexLanguage','scryfall','scryfallId','scryfallSet','scryfallNumber','scryfallLanguage'].map(k=>[k,card[k]||''])):{};$('dialog-title').textContent=card?'Editar carta':'Cadastrar carta';$('card-game').value=card?.game||'Pokémon';updateRarities(card?.game||'Pokémon',card?.rarity||'Comum');for(const [k,v] of Object.entries({name:card?.name||'',set:card?.set||'',condition:card?.condition||'NM',price:card?.price??0,quantity:card?.quantity??1,image:card?.image||'',description:card?.description||'',language:card?.language||''}))$('card-'+k).value=v;$('card-published').checked=card?.published!==false;$('api-search').value='';cancelPendingSuggestions();$('api-results').replaceChildren();$('card-dialog').showModal();}
 for(const b of ['cancel-x','cancel-form'])$(b).addEventListener('click',()=>$('card-dialog').close());
 $('card-form').addEventListener('submit',async e=>{e.preventDefault();syncGameFromRarity();const [game,rarity]=($('card-rarity').value||'').split('::');const obj={...extras,game:game||$('card-game').value||'Pokémon',name:$('card-name').value,set:$('card-set').value,rarity:rarity||'Comum',condition:$('card-condition').value,price:Number($('card-price').value),quantity:Number($('card-quantity').value),image:$('card-image').value,description:$('card-description').value,language:$('card-language').value.trim(),published:$('card-published').checked};try{await api(editId?'cards/'+encodeURIComponent(editId):'cards',editId?'PUT':'POST',obj);$('card-dialog').close();msg('Carta salva! Sincronização automática em andamento.');await refresh();}catch(err){alert(err.message);}});
 async function removeCard(c){if(!confirm('Excluir '+labelFor(c)+'? A exclusão será registrada no histórico.'))return;try{await api('cards/'+encodeURIComponent(c.id),'DELETE');msg('Carta excluída.');await refresh();}catch(e){alert(e.message);}}
@@ -79,46 +79,88 @@ async function searchAllGames(q) {
   found.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'pt-BR',{sensitivity:'base'}));
   return found;
 }
-$('api-search').addEventListener('keydown',ev=>{
-  if(ev.key==='Enter'){ev.preventDefault();$('api-search-btn').click();}
-});
-$('api-search-btn').addEventListener('click',async()=>{
-  const q=$('api-search').value.trim();
-  if(q.length<2){alert('Informe pelo menos duas letras.');return;}
+// Sugestões enquanto digita, com espera curta para evitar pesquisas a cada tecla.
+let searchDebounce=null;
+let searchRequest=0;
+function cancelPendingSuggestions() {
+  if(searchDebounce!==null)clearTimeout(searchDebounce);
+  searchDebounce=null;
+  searchRequest++;
+}
+function renderUnifiedResults(found) {
   const target=$('api-results');
-  target.replaceChildren(el('span','Buscando Pokémon e Magic...'));
-  try {
-    const found=await searchAllGames(q);
-    target.replaceChildren();
-    for(const c of found) {
-      const btn=el('button',undefined,'result-card');btn.type='button';
-      if(c.image){const img=el('img');img.src=c.image;img.alt='';btn.append(img);}
-      btn.append(el('strong',c.name),el('small',c.game+' · '+c.set));
-      btn.addEventListener('click',async()=>{
-        $('card-game').value=c.game;
-        updateRarities(c.game,c.rarity);
-        $('card-name').value=c.name;
-        $('card-set').value=c.set;
-        $('card-image').value=c.image||'';
-        extras={...extras,...Object.fromEntries(Object.entries(c).filter(([k])=>['tcgdexId','tcgdexLanguage','scryfallId','scryfallSet','scryfallNumber','scryfallLanguage'].includes(k)))};
-        // Não presumir o idioma físico da carta com base no idioma da pesquisa.
-        if(c.game==='Pokémon'&&c.tcgdexId) {
-          try {
-            const response=await fetch('https://api.tcgdex.net/v2/pt/cards/'+encodeURIComponent(c.tcgdexId));
-            if(response.ok) {
-              const d=await response.json();
-              $('card-name').value=d.name||c.name;
-              $('card-set').value=[d.set?.name||'',d.localId||''].filter(Boolean).join(' · ')||c.set;
-              const normalized=rarityFromTCGdex(d.rarity);
-              if(rarities.Pokémon.includes(normalized))updateRarities('Pokémon',normalized);
-              if(d.image)$('card-image').value=d.image+'/high.webp';
-            }
-          }catch(err){/* A edição manual permanece disponível. */}
-        }
-      });
-      target.append(btn);
+  target.replaceChildren();
+  for(const c of found) {
+    const btn=el('button',undefined,'result-card');
+    btn.type='button';
+    btn.title='Selecionar '+c.name+' ('+c.game+')';
+    if(c.image) {
+      const img=el('img');img.src=c.image;img.alt='';img.loading='lazy';btn.append(img);
     }
-  }catch(err){target.replaceChildren(el('span',err.message+' Você pode cadastrar manualmente.'));}
+    btn.append(el('strong',c.name),el('small',c.game+' · '+c.set));
+    btn.addEventListener('click',async()=>{
+      cancelPendingSuggestions();
+      $('card-game').value=c.game;
+      updateRarities(c.game,c.rarity);
+      $('card-name').value=c.name;
+      $('card-set').value=c.set;
+      $('card-image').value=c.image||'';
+      extras={...extras,...Object.fromEntries(Object.entries(c).filter(([k])=>['tcgdexId','tcgdexLanguage','scryfallId','scryfallSet','scryfallNumber','scryfallLanguage'].includes(k)))};
+      // O idioma físico da carta continua a ser preenchido manualmente.
+      if(c.game==='Pokémon'&&c.tcgdexId) {
+        try {
+          const response=await fetch('https://api.tcgdex.net/v2/pt/cards/'+encodeURIComponent(c.tcgdexId));
+          if(response.ok) {
+            const d=await response.json();
+            $('card-name').value=d.name||c.name;
+            $('card-set').value=[d.set?.name||'',d.localId||''].filter(Boolean).join(' · ')||c.set;
+            const normalized=rarityFromTCGdex(d.rarity);
+            if(rarities.Pokémon.includes(normalized))updateRarities('Pokémon',normalized);
+            if(d.image)$('card-image').value=d.image+'/high.webp';
+          }
+        }catch(err){/* Mantém os dados já escolhidos. */}
+      }
+    });
+    target.append(btn);
+  }
+}
+async function performSearch(query,requestId) {
+  const target=$('api-results');
+  target.replaceChildren(el('span','Buscando sugestões de Pokémon e Magic...','search-feedback'));
+  try {
+    const found=await searchAllGames(query);
+    if(requestId!==searchRequest||!$('card-dialog').open||$('api-search').value.trim()!==query)return;
+    renderUnifiedResults(found);
+  }catch(err) {
+    if(requestId!==searchRequest||!$('card-dialog').open)return;
+    target.replaceChildren(el('span',err.message+' Você também pode cadastrar manualmente.','search-feedback'));
+  }
+}
+function scheduleSearchSuggestions() {
+  cancelPendingSuggestions();
+  const query=$('api-search').value.trim();
+  if(query.length<3) {
+    $('api-results').replaceChildren();
+    return;
+  }
+  const id=searchRequest;
+  searchDebounce=setTimeout(()=>{searchDebounce=null;performSearch(query,id);},650);
+}
+$('api-search').addEventListener('input',scheduleSearchSuggestions);
+$('api-search').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault();$('api-search-btn').click();}
+});
+$('api-search-btn').addEventListener('click',()=>{
+  cancelPendingSuggestions();
+  const query=$('api-search').value.trim();
+  if(query.length<2){alert('Informe pelo menos duas letras.');return;}
+  performSearch(query,searchRequest);
+});
+document.querySelectorAll('[data-search-suggestion]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    $('api-search').value=btn.dataset.searchSuggestion;
+    $('api-search-btn').click();
+  });
 });
 setInterval(()=>{if(signed)api('status').then(renderStatus).catch(()=>{});},30000);
 start();
