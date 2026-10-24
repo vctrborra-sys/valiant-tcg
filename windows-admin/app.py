@@ -626,7 +626,7 @@ def read_github_token():
         finally:
             window.destroy()
         return (token or '').strip()
-    except (ImportError, RuntimeError, OSError, ValueError, tk.TclError) as exc:
+    except Exception:
         print('Não foi possível abrir a janela gráfica. Usando o terminal.')
         print('ATENÇÃO: neste campo de senha do Windows, Ctrl+V pode falhar.')
         print('Clique com o botão DIREITO ou use o menu da janela para colar.')
