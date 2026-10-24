@@ -1,7 +1,7 @@
 /* Catálogo Valiant TCG gerado pelo Windows */
 window.VALIANT_CATALOG = {
   "version": 1,
-  "updatedAt": "2026-10-24T21:45:41+00:00",
+  "updatedAt": "2026-10-24T21:47:01+00:00",
   "items": [
     {
       "id": "v-40bfafd4-c60a-4f91-a476-0920cae91848",
@@ -178,28 +178,6 @@ window.VALIANT_CATALOG = {
       "scryfallNumber": "70",
       "scryfallLanguage": "en",
       "description": ""
-    },
-    {
-      "id": "v-5eea5a40-8b76-4d23-bf6c-0320ce0eb82b",
-      "game": "Magic",
-      "name": "The One Ring",
-      "set": "The Hobbit Eternal · 44",
-      "rarity": "Mítica",
-      "condition": "NM",
-      "language": "Inglês",
-      "price": 1000000.0,
-      "quantity": 1,
-      "published": true,
-      "demo": false,
-      "image": "https://cards.scryfall.io/normal/front/b/d/bdd2c783-1483-490a-ae93-c4664a0a9564.jpg?1786128363",
-      "tcgdexId": "",
-      "tcgdexLanguage": "",
-      "scryfall": "The One Ring",
-      "scryfallId": "bdd2c783-1483-490a-ae93-c4664a0a9564",
-      "scryfallSet": "hoc",
-      "scryfallNumber": "44",
-      "scryfallLanguage": "en",
-      "description": "mt foda"
     }
   ]
 };
