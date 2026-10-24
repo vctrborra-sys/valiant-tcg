@@ -37,3 +37,28 @@ dialog#card-dialog{width:min(1120px,calc(100vw - 24px));}
  .print-results{grid-template-columns:repeat(auto-fill,minmax(115px,1fr))}
  .print-card img,.print-placeholder{height:154px}
 }
+
+/* Cabeçalho do cadastro sempre visível enquanto o diálogo é rolado. */
+dialog#card-dialog{
+  padding:0;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
+dialog#card-dialog > form{padding:0 27px 27px}
+dialog#card-dialog .dialog-head{
+  position:sticky;
+  top:0;
+  z-index:10;
+  padding:23px 27px 20px;
+  margin:0 -27px;
+  align-items:center;
+  background:#182a21;
+  border-bottom:1px solid #65734e;
+  box-shadow:0 8px 22px #07100c88;
+}
+dialog#card-dialog .dialog-head h2{margin-bottom:0}
+dialog#card-dialog .dialog-head #cancel-x{flex-shrink:0}
+@media(max-width:560px){
+  dialog#card-dialog > form{padding:0 16px 20px}
+  dialog#card-dialog .dialog-head{padding:18px 16px;margin:0 -16px}
+}
