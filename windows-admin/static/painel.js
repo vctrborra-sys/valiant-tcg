@@ -98,7 +98,7 @@ async function getPokemonPrints(query,preview,version){
       const params=new URLSearchParams({'name':'like:'+fragment,'pagination:page':String(page),'pagination:itemsPerPage':'160'});
       const response=await fetch('https://api.tcgdex.net/v2/'+lang+'/cards?'+params.toString());
       if(!response.ok){
-        if(lang==='en')continue;
+        if(lang==='en')break;
         if(!byId.size)throw Error('TCGdex não conseguiu carregar as impressões.');
         break;
       }
