@@ -167,7 +167,7 @@ def suggest_names(folder, query, limit=18):
     if not index.exists():
         with INDEX_LOCK:
             now = time.monotonic()
-            if not STATE['working'] and now-STATE['last_attempt']>180:
+            if not STATE['working'] and (not STATE['last_attempt'] or now-STATE['last_attempt']>180):
                 STATE['working']=True
                 STATE['last_attempt']=now
                 threading.Thread(target=index_worker,args=(folder,),daemon=True,name='ValiantMTGJSONPT').start()
