@@ -1,7 +1,7 @@
 /* Catálogo Valiant TCG gerado pelo Windows */
 window.VALIANT_CATALOG = {
   "version": 1,
-  "updatedAt": "2026-10-24T17:06:27+00:00",
+  "updatedAt": "2026-10-24T21:11:12+00:00",
   "items": [
     {
       "id": "v-40bfafd4-c60a-4f91-a476-0920cae91848",
@@ -177,6 +177,28 @@ window.VALIANT_CATALOG = {
       "scryfallSet": "uma",
       "scryfallNumber": "70",
       "scryfallLanguage": "en",
+      "description": ""
+    },
+    {
+      "id": "v-58580b34-00f6-4b56-a16d-ac6d3547bfbd",
+      "game": "Pokémon",
+      "name": "Charizard EX",
+      "set": "XY Black Star Promos · XY121",
+      "rarity": "Rara",
+      "condition": "NM",
+      "language": "Português",
+      "price": 900.0,
+      "quantity": 1,
+      "published": true,
+      "demo": false,
+      "image": "https://assets.tcgdex.net/en/xy/xyp/XY121/high.webp",
+      "tcgdexId": "xyp-XY121",
+      "tcgdexLanguage": "en",
+      "scryfall": "",
+      "scryfallId": "",
+      "scryfallSet": "",
+      "scryfallNumber": "",
+      "scryfallLanguage": "",
       "description": ""
     }
   ]
