@@ -24,7 +24,7 @@ function updateRarities(chosenGame,chosenRarity){const select=$('card-rarity');s
 function syncGameFromRarity(){const value=$('card-rarity').value||'';const [game]=value.split('::');if(game)$('card-game').value=game;}
 $('card-rarity').addEventListener('change',syncGameFromRarity);
 $('new-card').addEventListener('click',()=>openForm());
-function openForm(card=null){editId=card?.id||null;extras=card?Object.fromEntries(['tcgdexId','tcgdexLanguage','scryfall','scryfallId','scryfallSet','scryfallNumber','scryfallLanguage'].map(k=>[k,card[k]||''])):{};$('dialog-title').textContent=card?'Editar carta':'Cadastrar carta';$('card-game').value=card?.game||'Pokémon';updateRarities(card?.game||'Pokémon',card?.rarity||'Comum');for(const [k,v] of Object.entries({name:card?.name||'',set:card?.set||'',condition:card?.condition||'NM',price:card?.price??0,quantity:card?.quantity??1,image:card?.image||'',description:card?.description||'',language:card?.language||''}))$('card-'+k).value=v;$('card-published').checked=card?.published!==false;$('api-search').value='';++suggestVersion;$('api-results').replaceChildren();$('card-dialog').showModal();}
+function openForm(card=null){editId=card?.id||null;extras=card?Object.fromEntries(['tcgdexId','tcgdexLanguage','scryfall','scryfallId','scryfallSet','scryfallNumber','scryfallLanguage'].map(k=>[k,card[k]||''])):{};$('dialog-title').textContent=card?'Editar carta':'Cadastrar carta';$('card-game').value=card?.game||'Pokémon';updateRarities(card?.game||'Pokémon',card?.rarity||'Comum');for(const [k,v] of Object.entries({name:card?.name||'',set:card?.set||'',condition:card?.condition||'NM',price:card?.price??0,quantity:card?.quantity??1,image:card?.image||'',description:card?.description||'',language:card?.language||''}))$('card-'+k).value=v;$('card-published').checked=card?.published!==false;$('api-search').value='';$('magic-set-code').value='';$('api-results').replaceChildren();$('search-status').textContent='';$('more-prints').hidden=true;activatePrintSearch(card?.game||'Pokémon',false);++printSearchVersion;$('card-dialog').showModal();}
 for(const b of ['cancel-x','cancel-form'])$(b).addEventListener('click',()=>$('card-dialog').close());
 $('card-form').addEventListener('submit',async e=>{e.preventDefault();syncGameFromRarity();const rarityValue=$('card-rarity').value||'';const [game,rarity]=rarityValue.split('::');const obj={...extras,game:game||$('card-game').value||'Pokémon',name:$('card-name').value,set:$('card-set').value,rarity:rarity||$('card-rarity').selectedOptions[0]?.textContent||'Comum',condition:$('card-condition').value,price:Number($('card-price').value),quantity:Number($('card-quantity').value),image:$('card-image').value,description:$('card-description').value,language:$('card-language').value.trim(),published:$('card-published').checked};try{await api(editId?'cards/'+encodeURIComponent(editId):'cards',editId?'PUT':'POST',obj);$('card-dialog').close();msg('Carta salva! Sincronização automática em andamento.');await refresh();}catch(err){alert(err.message);}});
 async function removeCard(c){if(!confirm('Excluir '+labelFor(c)+'? A exclusão será registrada no histórico.'))return;try{await api('cards/'+encodeURIComponent(c.id),'DELETE');msg('Carta excluída.');await refresh();}catch(e){alert(e.message);}}
@@ -33,217 +33,237 @@ function renderHistory(){const target=$('audit-list');target.replaceChildren();f
 function renderUsers(){const target=$('users-list');target.replaceChildren();for(const u of users){const box=el('div',undefined,'userbox');box.append(el('strong',u.username),el('small',u.role==='proprietario'?'Proprietário':'Editor'),el('small','Criado em '+new Date(u.created_at).toLocaleDateString('pt-BR')));target.append(box);}}
 $('user-form').addEventListener('submit',async e=>{e.preventDefault();try{await api('users','POST',{username:$('new-username').value,password:$('new-userpass').value,role:$('new-role').value});$('user-form').reset();msg('Usuário criado.');await refresh();}catch(err){alert(err.message);}});
 $('password-form').addEventListener('submit',async e=>{e.preventDefault();try{await api('password','POST',{oldPassword:$('old-password').value,newPassword:$('new-password').value});$('password-form').reset();msg('Senha atualizada.');}catch(err){alert(err.message);}});
-function rarityFromTCGdex(x){const m={'Common':'Comum','Uncommon':'Incomum','Rare':'Rara','Rare Holo':'Rara','Double Rare':'Rara Dupla','Ultra Rare':'Ultra Rara','Illustration Rare':'Ilustração Rara','Special Illustration Rare':'Ilustração Rara Especial','Hyper Rare':'Rara Hiper','ACE SPEC Rare':'ACE SPEC'};return m[x]||x||'Rara';}
 
-// Sugestões REAIS enquanto digita: qualquer palavra do nome, em qualquer ordem,
-// com/sem acentos, inclusive nomes oficiais em português quando disponíveis.
-const searchCache=new Map();
-let suggestTimer=null, suggestVersion=0, lastSuggestions=[];
-const foldName=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').replace(/[‘’'´`]/g,'').trim();
-const searchTerms=value=>foldName(value).split(/\s+/).filter(Boolean);
-function matchByWords(name,alias,query){
-  const terms=searchTerms(query), haystack=foldName(name+' '+(alias||''));
-  return terms.every(term=>haystack.includes(term));
+function rarityFromTCGdex(value){
+  const known={'Common':'Comum','Uncommon':'Incomum','Rare':'Rara','Rare Holo':'Rara','Double Rare':'Rara Dupla','Ultra Rare':'Ultra Rara','Illustration Rare':'Ilustração Rara','Special Illustration Rare':'Ilustração Rara Especial','Hyper Rare':'Rara Hiper','ACE SPEC Rare':'ACE SPEC'};
+  return known[value]||value||'Rara';
 }
-function nameScore(card,query){
-  const q=foldName(query), title=foldName(card.localizedName||card.name), english=foldName(card.name);
-  if(title===q)return 0;
-  if(title.startsWith(q))return 1;
-  if(title.split(/\s+/).some(w=>w.startsWith(q)))return 2;
-  if(english===q)return 3;
-  if(english.startsWith(q))return 4;
-  if(english.split(/\s+/).some(w=>w.startsWith(q)))return 5;
-  return 6;
+function rarityFromScryfall(card){
+  if(card.set==='sld')return 'SLD';
+  return ({common:'Comum',uncommon:'Incomum',rare:'Rara',mythic:'Mítica'})[card.rarity]||'Rara';
 }
-function searchFragment(q){
-  // A palavra mais longa da consulta localiza nomes mesmo quando a busca começa
-  // pela segunda palavra, como "Ring" para "Sol Ring".
-  return searchTerms(q).filter(t=>t.length>=2).sort((a,b)=>b.length-a.length)[0]||q.trim();
+const languageLabels={en:'Inglês',pt:'Português',es:'Espanhol',ja:'Japonês',fr:'Francês',de:'Alemão',it:'Italiano'};
+let printSearchGame='Pokémon',printSearchVersion=0,previewTimer=null,availablePrints=[],shownPrints=0,pokemonSetsPromise=null;
+const visiblePrintsBatch=36;
+const normalizedName=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
+function searchWordTokens(value){return normalizedName(value).trim().split(/\s+/).filter(Boolean);}
+function fitsQuery(name, query){
+  const normalized=normalizedName(name);
+  return searchWordTokens(query).every(word=>normalized.includes(word));
 }
-function cachedSearch(cacheKey,action){
-  if(searchCache.has(cacheKey))return searchCache.get(cacheKey);
-  const pending=Promise.resolve().then(action).catch(error=>{searchCache.delete(cacheKey);throw error;});
-  searchCache.set(cacheKey,pending);
-  if(searchCache.size>75)searchCache.delete(searchCache.keys().next().value);
-  return pending;
+function getSearchFragment(value){
+  return searchWordTokens(value).filter(x=>x.length>=2).sort((a,b)=>b.length-a.length)[0]||value.trim();
 }
-async function searchPokemonLocale(query,lang){
-  const fragment=searchFragment(query);
-  if(fragment.length<2)return [];
-  const url=`https://api.tcgdex.net/v2/${lang}/cards?name=${encodeURIComponent('like:'+fragment)}&pagination:itemsPerPage=150`;
-  const items=await cachedSearch('poke:'+lang+':'+fragment,async()=>{
-    const res=await fetch(url);
-    if(!res.ok)throw Error('TCGdex indisponível ('+lang+').');
-    return res.json();
+function activatePrintSearch(game,clear=true){
+  printSearchGame=game;
+  ++printSearchVersion;
+  if(previewTimer!==null){clearTimeout(previewTimer);previewTimer=null;}
+  for(const tab of document.querySelectorAll('[data-search-game]')){
+    const selected=tab.dataset.searchGame===game;
+    tab.classList.toggle('active',selected);
+    tab.setAttribute('aria-selected',String(selected));
+  }
+  $('magic-set-field').hidden=game!=='Magic';
+  $('magic-lang-field').hidden=game!=='Magic';
+  $('api-search-btn').textContent=game==='Magic'?'⌕ Buscar Magic':'⌕ Buscar Pokémon';
+  $('api-search').placeholder=game==='Magic'?'Ex.: Mikaeus, the Unhallowed':'Ex.: Pikachu, Zoroark...';
+  $('search-tip').textContent=game==='Magic'
+    ?'Veja as artes e edições de cada impressão. O código da coleção e o idioma acima filtram as impressões da busca; confira o idioma físico da sua carta no cadastro.'
+    :'Veja as cartas e edições de Pokémon TCG, com suas imagens. Clique na impressão que corresponde à sua carta.';
+  if(clear)$('api-search').value='';
+  availablePrints=[];shownPrints=0;
+  $('api-results').replaceChildren();$('search-status').textContent='';
+  $('more-prints').hidden=true;
+}
+document.querySelectorAll('[data-search-game]').forEach(tab=>{
+  tab.addEventListener('click',()=>{activatePrintSearch(tab.dataset.searchGame);$('api-search').focus();});
+});
+async function pokemonSetNames(){
+  if(!pokemonSetsPromise){
+    pokemonSetsPromise=fetch('https://api.tcgdex.net/v2/pt/sets')
+      .then(r=>r.ok?r.json():[]).then(sets=>new Map((Array.isArray(sets)?sets:[]).map(s=>[s.id,s.name])))
+      .catch(()=>new Map());
+  }
+  return pokemonSetsPromise;
+}
+async function getPokemonPrints(query,preview,version){
+  const fragment=getSearchFragment(query);
+  const setNames=await pokemonSetNames();
+  let results=[];
+  let language='pt';
+  for(const lang of ['pt','en']){
+    let page=1;
+    const found=[];
+    while(page <= (preview?1:20)){
+      const params=new URLSearchParams({'name':'like:'+fragment,'pagination:page':String(page),'pagination:itemsPerPage':'160'});
+      const response=await fetch('https://api.tcgdex.net/v2/'+lang+'/cards?'+params.toString());
+      if(!response.ok)throw Error('TCGdex não conseguiu carregar as impressões ('+lang+').');
+      const batch=await response.json();
+      if(version!==printSearchVersion)return [];
+      if(!Array.isArray(batch))break;
+      found.push(...batch.filter(x=>fitsQuery(x.name,query)));
+      if(batch.length<160)break;
+      page++;
+    }
+    if(found.length){results=found;language=lang;break;}
+  }
+  return results.map(card=>{
+    const code=card.id?.split('-')[0]||'';
+    const number=card.localId||card.id?.slice(code.length+1)||'';
+    return {
+      game:'Pokémon',name:card.name,edition:(setNames.get(code)||code),number,
+      set:[setNames.get(code)||code,number].filter(Boolean).join(' · '),
+      image:card.image?card.image+'/high.webp':'',
+      tcgdexId:card.id,tcgdexLanguage:language,rarity:'Rara',
+      printLang:language,printKey:'poke:'+card.id
+    };
   });
-  return (Array.isArray(items)?items:[])
-    .filter(c=>matchByWords(c.name,'',query))
-    .slice(0,18)
-    .map(c=>({game:'Pokémon',name:c.name,set:c.id||'',image:c.image?c.image+'/high.webp':'',rarity:'Rara',tcgdexId:c.id,tcgdexLanguage:lang,source:'TCGdex'}));
 }
-async function searchMagicEnglish(query){
-  const fragment=searchFragment(query);
-  if(fragment.length<2)return [];
-  const names=await cachedSearch('magic:'+fragment,async()=>{
-    const res=await fetch('https://api.scryfall.com/cards/autocomplete?q='+encodeURIComponent(fragment));
-    if(!res.ok)throw Error('Scryfall indisponível.');
-    const payload=await res.json();
-    return payload.data||[];
-  });
-  // A busca por nome também cobre cartas populares cuja primeira palavra
-  // é diferente da digitada (ex.: 'Ring' encontra 'Sol Ring').
-  const printed=await cachedSearch('magic-prints:'+fragment,async()=>{
-    const queryText='name:"'+fragment.replace(/["\\]/g,'')+'"';
-    const params=new URLSearchParams({q:queryText,unique:'cards',order:'edhrec'});
-    const res=await fetch('https://api.scryfall.com/cards/search?'+params);
-    if(!res.ok)return [];
-    const data=await res.json();
-    return data.data||[];
-  }).catch(()=>[]);
-  const cards=names.map(name=>({game:'Magic',name,set:'Edições disponíveis após selecionar',image:'',rarity:'Rara',source:'Scryfall'}));
-  for(const item of printed.slice(0,40)){
-    if(item.name)cards.push({game:'Magic',name:item.name,set:(item.set_name||'')+' · '+(item.collector_number||''),image:item.image_uris?.normal||item.card_faces?.[0]?.image_uris?.normal||'',rarity:({common:'Comum',uncommon:'Incomum',rare:'Rara',mythic:'Mítica'}[item.rarity]||'Rara'),source:'Scryfall'});
+async function getLocalizedMagicName(query){
+  try {
+    const data=await api('search/nomes-pt?q='+encodeURIComponent(query));
+    if(data.status==='pronto'&&Array.isArray(data.items)&&data.items.length){
+      const exact=data.items.find(x=>normalizedName(x.localizedName)===normalizedName(query));
+      return (exact||data.items[0]).name||query;
+    }
+  }catch(_){}
+  return query;
+}
+async function getMagicPrints(query,preview,version){
+  const code=$('magic-set-code').value.trim().toLocaleLowerCase('en-US');
+  const lang=$('magic-print-lang').value;
+  const canonical=await getLocalizedMagicName(query);
+  const terms=searchWordTokens(canonical);
+  const searchParts=terms.map(term=>'name:"'+term.replace(/["\\]/g,'')+'"');
+  if(code)searchParts.push('set:'+code.replace(/[^a-z0-9]/g,''));
+  searchParts.push('lang:'+lang);
+  const params=new URLSearchParams({q:searchParts.join(' '),unique:'prints',order:'released',dir:'desc',include_multilingual:'true'});
+  let url='https://api.scryfall.com/cards/search?'+params.toString();
+  const prints=[];
+  let page=0;
+  while(url&&page<(preview?1:25)){
+    const response=await fetch(url);
+    if(version!==printSearchVersion)return [];
+    if(!response.ok){
+      if(response.status===404)break;
+      throw Error('Scryfall não conseguiu carregar as edições.');
+    }
+    const data=await response.json();
+    prints.push(...(data.data||[]));
+    url=data.has_more?data.next_page:null;
+    page++;
+    if(url)await new Promise(resolve=>setTimeout(resolve,90));
   }
-  return cards.filter(c=>matchByWords(c.name,'',query)).slice(0,45);
+  const mapped=prints.map(card=>({
+    game:'Magic',name:card.printed_name||card.name,canonicalName:card.name,
+    edition:card.set_name||card.set,number:card.collector_number||'',
+    set:[card.set_name||card.set,card.collector_number].filter(Boolean).join(' · '),
+    image:card.image_uris?.normal||card.card_faces?.[0]?.image_uris?.normal||'',
+    rarity:rarityFromScryfall(card),printLang:card.lang||lang,
+    scryfallId:card.id,scryfallSet:card.set,scryfallNumber:card.collector_number,
+    scryfallLanguage:card.lang,printKey:'magic:'+card.id
+  }));
+  return mapped;
 }
-async function searchMagicPortuguese(query){
-  const data=await api('search/nomes-pt?q='+encodeURIComponent(query));
-  return {status:data.status,items:(data.items||[]).filter(x=>matchByWords(x.name,x.localizedName,query))};
+function printResultCard(card){
+  const button=el('button',undefined,'print-card');
+  button.type='button';
+  button.title='Selecionar '+card.name+' · '+card.set;
+  if(card.image){
+    const image=el('img');image.src=card.image;image.loading='lazy';image.alt='Imagem da impressão '+card.name;
+    button.append(image);
+  }else button.append(el('div','Imagem indisponível','print-placeholder'));
+  button.append(el('strong',card.name),el('small',card.edition));
+  button.append(el('small','#'+card.number+' · '+(languageLabels[card.printLang]||card.printLang||'')));
+  button.append(el('small','+ Cadastrar esta impressão','print-card-action'));
+  button.addEventListener('click',()=>choosePrint(card));
+  return button;
 }
-function mergeSuggestions(query,groups){
-  const all=groups.flat(),unique=new Map();
-  for(const c of all){
-    const key=c.game==='Pokémon'?'poke:'+c.tcgdexId:'magic:'+foldName(c.name);
-    const previous=unique.get(key);
-    if(!previous || (c.localizedName && !previous.localizedName) ||
-       (c.game==='Pokémon'&&c.tcgdexLanguage==='pt'&&previous.tcgdexLanguage!=='pt'))unique.set(key,c);
-  }
-  return [...unique.values()]
-    .filter(c=>matchByWords(c.name,c.localizedName,query))
-    .sort((a,b)=>nameScore(a,query)-nameScore(b,query)||
-      (a.localizedName||a.name).localeCompare((b.localizedName||b.name),'pt-BR',{sensitivity:'base'}))
-    .slice(0,26);
+function appendPrintCards(){
+  const target=$('api-results');
+  const finish=Math.min(shownPrints+visiblePrintsBatch,availablePrints.length);
+  for(let i=shownPrints;i<finish;i++)target.append(printResultCard(availablePrints[i]));
+  shownPrints=finish;
+  $('more-prints').hidden=shownPrints>=availablePrints.length;
+  $('more-prints').textContent='Mostrar mais impressões ('+(availablePrints.length-shownPrints)+' restantes)';
 }
-function refreshSuggestionAria(){
-  $('api-search').setAttribute('aria-expanded',String(lastSuggestions.length>0));
-}
-function showSuggestions(cards,message=''){
-  const target=$('api-results');target.replaceChildren();lastSuggestions=cards;
-  refreshSuggestionAria();
-  if(message)target.append(el('span',message,'search-feedback'));
-  for(const c of cards){
-    const btn=el('button',undefined,'result-card');btn.type='button';
-    btn.title='Selecionar '+(c.localizedName||c.name);
-    if(c.image){const img=el('img');img.src=c.image;img.alt='';img.loading='lazy';btn.append(img);}
-    const label=c.localizedName||c.name;
-    btn.append(el('strong',label),el('small',c.game+(c.localizedName&&foldName(c.localizedName)!==foldName(c.name)?' · '+c.name:'')));
-    if(c.set&&c.game==='Pokémon')btn.append(el('small',c.set));
-    btn.addEventListener('click',()=>selectSuggestion(c));
-    target.append(btn);
-  }
-}
-async function selectSuggestion(c){
-  // Descarta respostas antigas. Selecionar uma sugestão não define o idioma da carta física.
-  ++suggestVersion;
-  if(suggestTimer!==null)clearTimeout(suggestTimer);
-  $('card-game').value=c.game;
-  updateRarities(c.game,rarities[c.game].includes(c.rarity)?c.rarity:'Rara');
-  $('card-name').value=c.localizedName||c.name;
-  $('card-set').value=c.set||'';
-  $('card-image').value=c.image||'';
-  extras={...extras,...Object.fromEntries(Object.entries(c).filter(([k])=>['tcgdexId','tcgdexLanguage','scryfallId','scryfallSet','scryfallNumber','scryfallLanguage'].includes(k)))};
-  if(c.game==='Magic'){
-    extras.scryfall=c.name; // Nome canônico para consultas futuras.
-    try {
-      const result=await fetch('https://api.scryfall.com/cards/named?exact='+encodeURIComponent(c.name));
-      if(result.ok){
-        const data=await result.json();
-        $('card-set').value=(data.set_name||data.set||'')+' · '+(data.collector_number||'');
-        $('card-image').value=data.image_uris?.normal||data.card_faces?.[0]?.image_uris?.normal||'';
-        const rarity=data.set==='sld'?'SLD':({common:'Comum',uncommon:'Incomum',rare:'Rara',mythic:'Mítica'}[data.rarity]||'Rara');
-        updateRarities('Magic',rarity);
-        extras.scryfallId=data.id||'';extras.scryfallSet=data.set||'';
-        extras.scryfallNumber=data.collector_number||'';extras.scryfallLanguage=data.lang||'';
-      }
-    }catch(_) { /* Dados já escolhidos permanecem editáveis. */ }
-  }else if(c.tcgdexId){
-    try {
-      // Usa o nome localizado oficial do TCGdex quando a mesma carta existe em PT.
-      let result=await fetch('https://api.tcgdex.net/v2/pt/cards/'+encodeURIComponent(c.tcgdexId));
-      if(!result.ok)result=await fetch('https://api.tcgdex.net/v2/'+(c.tcgdexLanguage||'en')+'/cards/'+encodeURIComponent(c.tcgdexId));
-      if(result.ok){
-        const d=await result.json();
-        $('card-name').value=d.name||c.name;
-        $('card-set').value=[d.set?.name||'',d.localId||''].filter(Boolean).join(' · ')||c.set;
+$('more-prints').addEventListener('click',appendPrintCards);
+async function choosePrint(card){
+  ++printSearchVersion;
+  if(previewTimer!==null)clearTimeout(previewTimer);
+  $('card-game').value=card.game;
+  updateRarities(card.game,card.rarity);
+  $('card-name').value=card.name;
+  $('card-set').value=card.set;
+  $('card-image').value=card.image||'';
+  // Metadados da API não substituem o idioma físico informado pelo administrador.
+  extras={...extras,
+    tcgdexId:card.game==='Pokémon'?(card.tcgdexId||''):'',
+    tcgdexLanguage:card.game==='Pokémon'?(card.tcgdexLanguage||''):'',
+    scryfall:card.game==='Magic'?(card.canonicalName||card.name):'',
+    scryfallId:card.game==='Magic'?(card.scryfallId||''):'',
+    scryfallSet:card.game==='Magic'?(card.scryfallSet||''):'',
+    scryfallNumber:card.game==='Magic'?(card.scryfallNumber||''):'',
+    scryfallLanguage:card.game==='Magic'?(card.scryfallLanguage||''):''
+  };
+  if(card.game==='Pokémon'&&card.tcgdexId){
+    try{
+      const lang=card.tcgdexLanguage||'pt';
+      const response=await fetch('https://api.tcgdex.net/v2/'+lang+'/cards/'+encodeURIComponent(card.tcgdexId));
+      if(response.ok){
+        const d=await response.json();
+        $('card-set').value=[d.set?.name||card.edition,d.localId||card.number].filter(Boolean).join(' · ');
         const rarity=rarityFromTCGdex(d.rarity);
-        updateRarities('Pokémon',rarities.Pokémon.includes(rarity)?rarity:'Rara');
+        if(rarities.Pokémon.includes(rarity))updateRarities('Pokémon',rarity);
         if(d.image)$('card-image').value=d.image+'/high.webp';
       }
-    }catch(_){ /* Manter os campos escolhidos. */ }
+    }catch(_){}
   }
-  showSuggestions([],'Carta selecionada. Confira edição, idioma e conservação antes de salvar.');
+  $('search-status').textContent='Impressão selecionada: '+card.name+' — '+card.set+'. Confira idioma, preço e conservação antes de salvar.';
+  $('card-name').focus();
 }
-async function searchAllGames(query,version){
-  const tasks=[searchPokemonLocale(query,'pt'),searchPokemonLocale(query,'en'),searchMagicEnglish(query),searchMagicPortuguese(query)];
-  const results=await Promise.allSettled(tasks);
-  if(version!==suggestVersion||!$('card-dialog').open||$('api-search').value.trim()!==query)return;
-  const groups=[];const errors=[];let translationStatus='';
-  results.forEach((result,index)=>{
-    if(result.status==='fulfilled'){
-      if(index===3){translationStatus=result.value.status;groups.push(result.value.items);}
-      else groups.push(result.value);
-    }else errors.push(result.reason.message);
-  });
-  const cards=mergeSuggestions(query,groups);
-  const notice=translationStatus==='preparando'?'Preparando nomes de Magic em português pela primeira vez; as sugestões em inglês e Pokémon já funcionam.':
-    (!cards.length?'Nenhuma carta encontrada. Experimente outra palavra do nome.':'');
-  showSuggestions(cards,notice||(!cards.length&&errors.length?errors[0]:'') );
-  if(translationStatus==='preparando'){
-    // Enquanto o índice é criado pela primeira vez, verificar somente
-    // o banco local, sem repetir consultas externas à TCGdex/Scryfall.
-    async function pollPt(tries){
-      if(tries>=24||version!==suggestVersion||!$('card-dialog').open||$('api-search').value.trim()!==query)return;
-      try {
-        const pt=await searchMagicPortuguese(query);
-        if(pt.status==='pronto'){
-          showSuggestions(mergeSuggestions(query,[cards,pt.items]));
-          return;
-        }
-        if(pt.status!=='preparando')return;
-      }catch(_){return;}
-      setTimeout(()=>pollPt(tries+1),5500);
-    }
-    setTimeout(()=>pollPt(0),5500);
-  }
-}
-function queueSuggestions(immediate=false){
-  if(suggestTimer!==null){clearTimeout(suggestTimer);suggestTimer=null;}
-  const version=++suggestVersion;
+async function runPrintSearch(preview=false){
+  if(previewTimer!==null){clearTimeout(previewTimer);previewTimer=null;}
   const query=$('api-search').value.trim();
-  if(query.length<2){showSuggestions([]);return;}
-  if(immediate){searchAllGames(query,version);return;}
-  suggestTimer=setTimeout(()=>{
-    suggestTimer=null;
-    if(version!==suggestVersion)return;
-    showSuggestions([],'Buscando sugestões...');
-    searchAllGames(query,version);
-  },480);
-}
-$('api-search').addEventListener('input',()=>queueSuggestions());
-$('api-search').addEventListener('keydown',event=>{
-  if(event.key==='Escape'){++suggestVersion;showSuggestions([]);return;}
-  if(event.key==='ArrowDown'){
-    const first=$('api-results').querySelector('button');
-    if(first){event.preventDefault();first.focus();}
+  if(query.length<2){
+    if(!preview)$('search-status').textContent='Digite pelo menos 2 letras para pesquisar.';
+    return;
   }
-  if(event.key==='Enter'){event.preventDefault();queueSuggestions(true);}
-});
-$('api-results').addEventListener('keydown',event=>{
-  const buttons=[...$('api-results').querySelectorAll('button')];
-  const index=buttons.indexOf(document.activeElement);
-  if(event.key==='ArrowDown'&&index>=0){event.preventDefault();buttons[Math.min(index+1,buttons.length-1)]?.focus();}
-  if(event.key==='ArrowUp'&&index>=0){event.preventDefault();if(index===0)$('api-search').focus();else buttons[index-1]?.focus();}
-});
-$('api-search-btn').addEventListener('click',()=>queueSuggestions(true));
+  const version=++printSearchVersion;
+  const game=printSearchGame;
+  const status=$('search-status');
+  status.textContent='Buscando '+(game==='Magic'?'impressões no Scryfall...':'impressões na TCGdex...');
+  $('api-search-btn').disabled=true;
+  try{
+    const result=game==='Magic'?await getMagicPrints(query,preview,version):await getPokemonPrints(query,preview,version);
+    if(version!==printSearchVersion||!$('card-dialog').open)return;
+    availablePrints=result;
+    shownPrints=0;
+    $('api-results').replaceChildren();
+    if(!result.length)status.textContent='Nenhuma impressão encontrada. Experimente outro nome ou idioma.';
+    else{
+      status.textContent=result.length+' '+(result.length===1?'impressão encontrada':'impressões encontradas')+(preview?' · Prévia automática; clique em Buscar para ver mais.':'')+'. Clique na arte e edição desejadas.';
+      appendPrintCards();
+    }
+  }catch(err){
+    if(version===printSearchVersion)status.textContent=err.message+' Você ainda pode cadastrar manualmente.';
+  }finally{
+    if(version===printSearchVersion)$('api-search-btn').disabled=false;
+  }
+}
+function schedulePrintPreview(){
+  if(previewTimer!==null)clearTimeout(previewTimer);
+  ++printSearchVersion;
+  $('api-search-btn').disabled=false;
+  if($('api-search').value.trim().length<3){
+    availablePrints=[];$('api-results').replaceChildren();$('more-prints').hidden=true;$('search-status').textContent='';return;
+  }
+  previewTimer=setTimeout(()=>runPrintSearch(true),650);
+}
+$('api-search').addEventListener('input',schedulePrintPreview);
+$('magic-set-code').addEventListener('input',schedulePrintPreview);
+$('magic-print-lang').addEventListener('change',()=>runPrintSearch(true));
+$('api-search').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();runPrintSearch(false);}});
+$('api-search-btn').addEventListener('click',()=>runPrintSearch(false));
 setInterval(()=>{if(signed)api('status').then(renderStatus).catch(()=>{});},30000);
 start();
