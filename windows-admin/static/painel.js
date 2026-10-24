@@ -90,8 +90,21 @@ async function searchMagicEnglish(query){
     const payload=await res.json();
     return payload.data||[];
   });
-  return names.filter(name=>matchByWords(name,'',query)).slice(0,20)
-    .map(name=>({game:'Magic',name,set:'Edições disponíveis após selecionar',image:'',rarity:'Rara',source:'Scryfall'}));
+  // A busca por nome também cobre cartas populares cuja primeira palavra
+  // é diferente da digitada (ex.: 'Ring' encontra 'Sol Ring').
+  const printed=await cachedSearch('magic-prints:'+fragment,async()=>{
+    const queryText='name:"'+fragment.replace(/["\\]/g,'')+'"';
+    const params=new URLSearchParams({q:queryText,unique:'cards',order:'edhrec'});
+    const res=await fetch('https://api.scryfall.com/cards/search?'+params);
+    if(!res.ok)return [];
+    const data=await res.json();
+    return data.data||[];
+  }).catch(()=>[]);
+  const cards=names.map(name=>({game:'Magic',name,set:'Edições disponíveis após selecionar',image:'',rarity:'Rara',source:'Scryfall'}));
+  for(const item of printed.slice(0,40)){
+    if(item.name)cards.push({game:'Magic',name:item.name,set:(item.set_name||'')+' · '+(item.collector_number||''),image:item.image_uris?.normal||item.card_faces?.[0]?.image_uris?.normal||'',rarity:({common:'Comum',uncommon:'Incomum',rare:'Rara',mythic:'Mítica'}[item.rarity]||'Rara'),source:'Scryfall'});
+  }
+  return cards.filter(c=>matchByWords(c.name,'',query)).slice(0,45);
 }
 async function searchMagicPortuguese(query){
   const data=await api('search/nomes-pt?q='+encodeURIComponent(query));
@@ -186,22 +199,21 @@ async function searchAllGames(query,version){
     (!cards.length?'Nenhuma carta encontrada. Experimente outra palavra do nome.':'');
   showSuggestions(cards,notice||(!cards.length&&errors.length?errors[0]:'') );
   if(translationStatus==='preparando'){
-    setTimeout(async()=>{
-      if(version!==suggestVersion||!$('card-dialog').open||$('api-search').value.trim()!==query)return;
+    // Enquanto o índice é criado pela primeira vez, verificar somente
+    // o banco local, sem repetir consultas externas à TCGdex/Scryfall.
+    async function pollPt(tries){
+      if(tries>=24||version!==suggestVersion||!$('card-dialog').open||$('api-search').value.trim()!==query)return;
       try {
         const pt=await searchMagicPortuguese(query);
         if(pt.status==='pronto'){
           showSuggestions(mergeSuggestions(query,[cards,pt.items]));
-        }else if(pt.status==='preparando'){
-          // Nova consulta sem repetir chamadas às APIs externas.
-          const timerVersion=suggestVersion;
-          setTimeout(async()=>{
-            if(timerVersion!==suggestVersion||!$('card-dialog').open)return;
-            try{const fresh=await searchMagicPortuguese(query);if(timerVersion===suggestVersion&&fresh.status==='pronto')showSuggestions(mergeSuggestions(query,[cards,fresh.items]));}catch(_){}
-          },5500);
+          return;
         }
-      }catch(_){}
-    },5500);
+        if(pt.status!=='preparando')return;
+      }catch(_){return;}
+      setTimeout(()=>pollPt(tries+1),5500);
+    }
+    setTimeout(()=>pollPt(0),5500);
   }
 }
 function queueSuggestions(immediate=false){
