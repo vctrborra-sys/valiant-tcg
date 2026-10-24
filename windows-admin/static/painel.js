@@ -6,6 +6,10 @@ const rarities={Pokémon:['Comum','Incomum','Rara','Rara Dupla','Ultra Rara','Il
 const allGames=['Pokémon','Magic'];
 const rarityOptionValue=(game,rarity)=>`${game}::${rarity}`;
 const money=n=>(Number(n)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const alphabeticalCollator = new Intl.Collator('pt-BR',{sensitivity:'base',numeric:true});
+const textCompare = (left,right) => alphabeticalCollator.compare(String(left||''),String(right||''));
+const compareCardAlphabetically=(a,b)=>textCompare(a.name,b.name)||textCompare(a.set||a.edition,b.set||b.edition)||textCompare(a.number,b.number);
+
 const msg=t=>{$('message').textContent=t;};
 async function api(path,method='GET',data){const opts={method,credentials:'same-origin',headers:{'X-CSRF-Token':csrf}};if(data!==undefined){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(data);}const res=await fetch('/api/'+path,opts);let x=await res.json().catch(()=>({error:'Resposta inválida.'}));if(!res.ok)throw Error(x.error||'Falha na requisição.');return x;}
 function labelFor(c){return [c.name,c.set].filter(Boolean).join(' · ');}
@@ -19,7 +23,7 @@ function renderStatus(d){$('sync-state').textContent=!d.hasToken?'Token GitHub n
 $('publish-now').addEventListener('click',async()=>{let btn=$('publish-now');btn.disabled=true;try{const r=await api('publish','POST');msg(r.message);await refresh();}catch(e){msg(e.message);}finally{btn.disabled=false;}});
 for(const button of document.querySelectorAll('[data-tab]')){button.addEventListener('click',()=>{for(const b of document.querySelectorAll('[data-tab]'))b.classList.toggle('active',b===button);for(const id of ['collection','history','users','settings'])$('tab-'+id).hidden=button.dataset.tab!==id;msg('');});}
 $('filter-name').addEventListener('input',renderCards);$('filter-game').addEventListener('change',renderCards);
-function renderCards(){const tbody=$('cards-body');tbody.replaceChildren();const q=$('filter-name').value.toLowerCase(),g=$('filter-game').value;const filtered=cards.filter(c=>(!g||c.game===g)&&(c.name+' '+c.set).toLowerCase().includes(q));$('cards-count').textContent=cards.length+' registros';for(const c of filtered){const tr=el('tr');const td0=el('td');const wrap=el('div',undefined,'namecell');const img=el('img');img.className='thumb';img.alt='';if(c.image)img.src=c.image;wrap.append(img);const group=el('div');group.append(el('strong',c.name),el('small',c.set));wrap.append(group);td0.append(wrap);tr.append(td0);for(const val of [c.game,c.condition,money(c.price),String(c.quantity),c.author||'—',c.published?'Sim':'Não'])tr.append(el('td',val));const controls=el('td');const act=el('div',undefined,'actions');const edit=el('button','Editar','secondary');edit.addEventListener('click',()=>openForm(c));const del=el('button','Excluir','subtle danger');del.addEventListener('click',()=>removeCard(c));act.append(edit,del);controls.append(act);tr.append(controls);tbody.append(tr);}if(!filtered.length){const tr=el('tr');const td=el('td','Nenhuma carta encontrada.');td.colSpan=8;tr.append(td);tbody.append(tr);}}
+function renderCards(){const tbody=$('cards-body');tbody.replaceChildren();const q=$('filter-name').value.toLowerCase(),g=$('filter-game').value;const filtered=cards.filter(c=>(!g||c.game===g)&&(c.name+' '+c.set).toLowerCase().includes(q)).sort(compareCardAlphabetically);$('cards-count').textContent=cards.length+' registros';for(const c of filtered){const tr=el('tr');const td0=el('td');const wrap=el('div',undefined,'namecell');const img=el('img');img.className='thumb';img.alt='';if(c.image)img.src=c.image;wrap.append(img);const group=el('div');group.append(el('strong',c.name),el('small',c.set));wrap.append(group);td0.append(wrap);tr.append(td0);for(const val of [c.game,c.condition,money(c.price),String(c.quantity),c.author||'—',c.published?'Sim':'Não'])tr.append(el('td',val));const controls=el('td');const act=el('div',undefined,'actions');const edit=el('button','Editar','secondary');edit.addEventListener('click',()=>openForm(c));const del=el('button','Excluir','subtle danger');del.addEventListener('click',()=>removeCard(c));act.append(edit,del);controls.append(act);tr.append(controls);tbody.append(tr);}if(!filtered.length){const tr=el('tr');const td=el('td','Nenhuma carta encontrada.');td.colSpan=8;tr.append(td);tbody.append(tr);}}
 function updateRarities(chosenGame,chosenRarity){const select=$('card-rarity');select.replaceChildren();for(const game of allGames){const group=document.createElement('optgroup');group.label=game;for(const rarity of rarities[game]){const opt=el('option',rarity);opt.value=rarityOptionValue(game,rarity);group.append(opt);}select.append(group);}const fallbackGame=chosenGame||$('card-game').value||'Pokémon';const fallbackRarity=chosenRarity||rarities[fallbackGame][0];select.value=rarityOptionValue(fallbackGame,fallbackRarity);syncGameFromRarity();}
 function syncGameFromRarity(){const value=$('card-rarity').value||'';const [game]=value.split('::');if(game)$('card-game').value=game;}
 $('card-rarity').addEventListener('change',syncGameFromRarity);
@@ -242,7 +246,7 @@ async function runPrintSearch(preview=false){
   try{
     const result=game==='Magic'?await getMagicPrints(query,preview,version):await getPokemonPrints(query,preview,version);
     if(version!==printSearchVersion||!$('card-dialog').open)return;
-    availablePrints=result;
+    availablePrints=result.slice().sort(compareCardAlphabetically);
     shownPrints=0;
     $('api-results').replaceChildren();
     if(!result.length)status.textContent='Nenhuma impressão encontrada. Experimente outro nome ou idioma.';
